@@ -1,13 +1,13 @@
 import java.util.Objects;
 
-public class SubTask extends Task{
+public class SubTask extends Task {
 
     private EpicTask myEpic;
 
-    public SubTask(EpicTask epic){ //Subtask не бываетет без эпика
+    public SubTask(EpicTask epic) { //Subtask не бываетет без эпика
         super();
         myEpic = epic;
-        
+
     }
 
     public EpicTask getMyEpic() {
@@ -18,7 +18,7 @@ public class SubTask extends Task{
         myEpic = null;
     }
 
-    public  int getMyEpicId() {
+    public int getMyEpicId() {
         return myEpic.getId();
     }
 
@@ -40,9 +40,9 @@ public class SubTask extends Task{
     public String toString() {
         return "SubTask{myEpicId=" + getMyEpicId()
                 + ", name='" + name + '\''
-                +", description='" + description + '\''
-                +", Id=" + Id
-                +", status='" + status + '\'' + "}^\b";
+                + ", description='" + description + '\''
+                + ", Id=" + Id
+                + ", status='" + status + '\'' + "}^\b";
     }
 }
 //Для каждой подзадачи известно, в рамках какого эпика она выполняется.

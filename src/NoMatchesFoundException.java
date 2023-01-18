@@ -1,4 +1,4 @@
-public class NoMatchesFoundException extends Exception{
+public class NoMatchesFoundException extends Exception {
 
     public NoMatchesFoundException() {
     }

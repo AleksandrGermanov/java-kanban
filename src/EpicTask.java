@@ -49,6 +49,7 @@ public class EpicTask extends Task {
             status = Statuses.IN_PROGRESS.toString();
         }
     }
+
     @Override
     public void setStatus(String status) {
         try {
@@ -83,7 +84,7 @@ public class EpicTask extends Task {
                 ", status='" + status + '\'' + "}^\b";
     }
 
-    public void removeMySubTaskMap(){
+    public void removeMySubTaskMap() {
         mySubTaskMap = null;
     }
 }

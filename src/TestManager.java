@@ -1,5 +1,4 @@
 import java.util.Random;
-import java.util.ArrayList;
 
 public class TestManager extends Manager {
 
@@ -12,14 +11,14 @@ public class TestManager extends Manager {
     /**
      * поменял название на test0
      */
-    public static void test0 () {
-        createTask(new Task(),randomTaskNameCreator());
-        createTask(new Task(),randomTaskNameCreator());
-        createTask(new EpicTask(),randomTaskNameCreator());
-        createTask(new SubTask(getTask(200002)),randomTaskNameCreator());
-        createTask(new SubTask(getTask(200002)),randomTaskNameCreator());
-        createTask(new EpicTask(),randomTaskNameCreator());
-        createTask(new SubTask(getTask(200005)),randomTaskNameCreator());
+    public static void test0() {
+        createTask(new Task(), randomTaskNameCreator());
+        createTask(new Task(), randomTaskNameCreator());
+        createTask(new EpicTask(), randomTaskNameCreator());
+        createTask(new SubTask(getTask(200002)), randomTaskNameCreator());
+        createTask(new SubTask(getTask(200002)), randomTaskNameCreator());
+        createTask(new EpicTask(), randomTaskNameCreator());
+        createTask(new SubTask(getTask(200005)), randomTaskNameCreator());
         System.out.println(getTaskList());
         changeTask(100000);
         changeTask(300006);
@@ -30,8 +29,6 @@ public class TestManager extends Manager {
         removeTask(300003);
         System.out.println(getTaskList());
     }
-
-
 
     static String randomTaskNameCreator() {
         Random random = new Random();
@@ -71,6 +68,7 @@ public class TestManager extends Manager {
                 break;
         }
     }
+
     static String randomStatus() {
         Random random = new Random();
         return Statuses.values()[random.nextInt(Statuses.values().length)].toString();
