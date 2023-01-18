@@ -12,13 +12,13 @@ public class TestManager extends Manager {
      * поменял название на test0
      */
     public static void test0() {
-        createTask(new Task(), randomTaskNameCreator());
-        createTask(new Task(), randomTaskNameCreator());
-        createTask(new EpicTask(), randomTaskNameCreator());
-        createTask(new SubTask(getTask(200002)), randomTaskNameCreator());
-        createTask(new SubTask(getTask(200002)), randomTaskNameCreator());
-        createTask(new EpicTask(), randomTaskNameCreator());
-        createTask(new SubTask(getTask(200005)), randomTaskNameCreator());
+        createTask(new Task());
+        createTask(new Task());
+        createTask(new EpicTask());
+        createTask(new SubTask(getTask(200002)));
+        createTask(new SubTask(getTask(200002)));
+        createTask(new EpicTask());
+        createTask(new SubTask(getTask(200005)));
         System.out.println(getTaskList());
         changeTask(100000);
         changeTask(300006);
@@ -40,14 +40,6 @@ public class TestManager extends Manager {
                 "в первый раз", "для переезда", "за один день"};
         return (word1[random.nextInt(word1.length)] + ' ' + word2[random.nextInt(word2.length)]
                 + ' ' + word3[random.nextInt(word3.length)]);
-    }
-
-    public static <T extends Task> void createTask(T task, String name) {//Создание.
-        // Сам объект должен передаваться в качестве параметра.
-        task.setName(name);
-        task.setDescription("Нужно просто пойти и " + name);
-        task.setId(generateId(task));
-        putTaskToMap(task);
     }
 
     public static <T extends Task> void changeTask(int id) {
@@ -73,4 +65,6 @@ public class TestManager extends Manager {
         Random random = new Random();
         return Statuses.values()[random.nextInt(Statuses.values().length)].toString();
     }
+
+
 }
