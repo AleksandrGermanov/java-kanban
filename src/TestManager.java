@@ -1,7 +1,8 @@
 import java.util.Random;
+import java.util.ArrayList;
 
 public class TestManager extends Manager {
-
+    static Random random = new Random();
     /*Создайте 2 задачи, один эпик с 2 подзадачами, а другой эпик с 1 подзадачей.
 Распечатайте списки эпиков, задач и подзадач, через System.out.println(..)
 Измените статусы созданных объектов, распечатайте. Проверьте, что статус задачи и подзадачи сохранился,
@@ -30,9 +31,8 @@ public class TestManager extends Manager {
         System.out.println(getTaskList());
     }
 
-    static String randomTaskNameCreator() {
-        Random random = new Random();
 
+    static String randomTaskNameCreator() {
         String[] word1 = {"помыть", "купить", "убрать", "разобрать", "приготовить"};
         String[] word2 = {"квартиру", "машину", "овощи", "холодильник",
                 "вещи", "ружье", "сковороду", "компьютер"};
@@ -62,8 +62,46 @@ public class TestManager extends Manager {
     }
 
     static String randomStatus() {
-        Random random = new Random();
         return Statuses.values()[random.nextInt(Statuses.values().length)].toString();
+    }
+
+    public static void createRandomTasks(int quantity) {
+        for (int i = 0; i < quantity; i++) {
+            switch (TaskFamily.values()[random.nextInt(TaskFamily.values().length)]) {
+                case SUBTASK:
+                    if (!tasks.get(TaskFamily.EPICTASK).isEmpty()) {
+                        int randomEpicId;
+                        int epicsSize = tasks.get(TaskFamily.EPICTASK).size();
+                        Integer[] epicsArray = (Integer[]) tasks.get(TaskFamily.EPICTASK)
+                                .keySet().toArray();
+                        randomEpicId = epicsArray[random.nextInt(epicsSize)];
+                        createTask(new SubTask(getTask(randomEpicId)));
+                        break;
+                    }
+                case TASK:
+                case EPICTASK:
+                    if (coin()) {//нужна, чтобы итерации на несозданные SubTask распределялись равномерно
+                        // между Task и EpicTask
+                        createTask(new Task());
+                    } else {
+                        createTask(new EpicTask());
+                    }
+                    break;
+            }
+        }
+        System.out.println("Создано " + countAllTasks() + " объектов.");
+    }
+
+    public static boolean coin() {
+        return random.nextInt(2) == 0;
+    }
+
+    public static int countAllTasks(){
+        int sum = 0;
+        for (TaskFamily tf: TaskFamily.values()){
+            sum += tasks.get(tf).size();
+        }
+        return sum;
     }
 
 
