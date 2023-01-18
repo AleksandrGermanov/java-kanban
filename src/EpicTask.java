@@ -20,10 +20,6 @@ public class EpicTask extends Task {
         return taskList;
     }
 
-    /*Для эпиков:
-    если у эпика нет подзадач или все они имеют статус NEW, то статус должен быть NEW.
-    если все подзадачи имеют статус DONE, то и эпик считается завершённым — со статусом DONE.
-    во всех остальных случаях статус должен быть IN_PROGRESS.*/
     public void setStatus() {
         if (mySubTaskMap.isEmpty()) {
             status = Statuses.NEW.toString();
@@ -88,5 +84,3 @@ public class EpicTask extends Task {
         mySubTaskMap = null;
     }
 }
-/*  Каждый эпик знает, какие подзадачи в него входят.
-Завершение всех подзадач эпика считается завершением эпика.*/

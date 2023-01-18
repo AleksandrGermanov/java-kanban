@@ -1,17 +1,9 @@
-import java.util.Random;
 import java.util.ArrayList;
+import java.util.Random;
 
 public class TestManager extends Manager {
     static Random random = new Random();
-    /*Создайте 2 задачи, один эпик с 2 подзадачами, а другой эпик с 1 подзадачей.
-Распечатайте списки эпиков, задач и подзадач, через System.out.println(..)
-Измените статусы созданных объектов, распечатайте. Проверьте, что статус задачи и подзадачи сохранился,
-а статус эпика рассчитался по статусам подзадач.
-И, наконец, попробуйте удалить одну из задач и один из эпиков.  */
 
-    /**
-     * поменял название на test0
-     */
     public static void test0() {
         createTask(new Task());
         createTask(new Task());
@@ -28,6 +20,28 @@ public class TestManager extends Manager {
         System.out.println(getTaskList());
         removeTask(200005);
         removeTask(300003);
+        System.out.println(getTaskList());
+    }
+
+    public static void test1(int quantity) {
+        createRandomTasks(quantity);
+        System.out.println(getTaskList());
+        changeRandomTasks(50);
+        System.out.println(getTaskList());
+        removeRandomTasks(50);
+        System.out.println(getTaskList());
+        removeRandomTasks(100);
+        System.out.println(getTaskList());
+    }
+
+    public static void test1(int quantity, int percentOfChanges, int percentOfRemoves) {
+        createRandomTasks(quantity);
+        System.out.println(getTaskList());
+        changeRandomTasks(percentOfChanges);
+        System.out.println(getTaskList());
+        removeRandomTasks(percentOfRemoves);
+        System.out.println(getTaskList());
+        removeRandomTasks(100);
         System.out.println(getTaskList());
     }
 
@@ -65,16 +79,31 @@ public class TestManager extends Manager {
         return Statuses.values()[random.nextInt(Statuses.values().length)].toString();
     }
 
+    public static boolean coin() {
+        return random.nextInt(2) == 0;
+    }
+
+    public static int countAllTasks() {
+        int sum = 0;
+        for (TaskFamily tf : TaskFamily.values()) {
+            sum += tasks.get(tf).size();
+        }
+        return sum;
+    }
+
     public static void createRandomTasks(int quantity) {
+        ArrayList<Integer> epicsList = new ArrayList<>();
+
         for (int i = 0; i < quantity; i++) {
             switch (TaskFamily.values()[random.nextInt(TaskFamily.values().length)]) {
                 case SUBTASK:
                     if (!tasks.get(TaskFamily.EPICTASK).isEmpty()) {
                         int randomEpicId;
                         int epicsSize = tasks.get(TaskFamily.EPICTASK).size();
-                        Integer[] epicsArray = (Integer[]) tasks.get(TaskFamily.EPICTASK)
-                                .keySet().toArray();
-                        randomEpicId = epicsArray[random.nextInt(epicsSize)];
+                        for (int id : tasks.get(TaskFamily.EPICTASK).keySet()) {
+                            if (!epicsList.contains(id)) epicsList.add(id);
+                        }
+                        randomEpicId = epicsList.get(random.nextInt(epicsSize));
                         createTask(new SubTask(getTask(randomEpicId)));
                         break;
                     }
@@ -92,17 +121,65 @@ public class TestManager extends Manager {
         System.out.println("Создано " + countAllTasks() + " объектов.");
     }
 
-    public static boolean coin() {
-        return random.nextInt(2) == 0;
-    }
+    public static ArrayList<Integer> getAllKeysList() {
+        ArrayList<Integer> list = new ArrayList<>();
 
-    public static int countAllTasks(){
-        int sum = 0;
-        for (TaskFamily tf: TaskFamily.values()){
-            sum += tasks.get(tf).size();
+        for (TaskFamily tf : TaskFamily.values()) {
+            for (int id : tasks.get(tf).keySet()) {
+                list.add(id);
+            }
         }
-        return sum;
+        return list;
     }
 
+    public static void changeRandomTasks(int percentage) {
+        ArrayList<Integer> allKeys = getAllKeysList();
+        Integer id;
+        int count = 0;
 
+        if (percentage > 100) {
+            System.out.println("Некоторые объекты будут изменены дважды");
+        }
+        for (int i = 0; i < (countAllTasks() * percentage / 100); i++) {
+            id = allKeys.get(random.nextInt(allKeys.size()));
+            changeTask(id);
+            allKeys.remove(id);
+            ++count;
+            if (allKeys.isEmpty()) {
+                allKeys = getAllKeysList();
+            }
+        }
+        System.out.println("Изменено " + count + " объектов.");
+    }
+
+    public static void removeRandomTasks(int percentage) {
+        ArrayList<Integer> allKeys = getAllKeysList();
+        Integer id;
+        int count = 0;
+        int plannedRemaining = countAllTasks() * (100 - percentage) / 100;
+        int remaining = countAllTasks();
+
+        if (percentage >= 100) {
+            System.out.println("Объекты будут удаляться, пока не останется ни одного!");
+        } else {
+            System.out.println("Эпик сам удаляет свои субтаски, поэтому результат"
+                    + "может отличаться от запланированного.");
+        }
+        while ((remaining > plannedRemaining) && !allKeys.isEmpty()) {
+            id = allKeys.get(random.nextInt(allKeys.size()));
+            removeTask(id);
+            ++count;
+            allKeys = getAllKeysList();
+            remaining = countAllTasks();
+        }
+        if (remaining < plannedRemaining) {
+            System.out.println("Ой, кажется мы немного перестарались:");
+            System.out.println("хотели оставить " + plannedRemaining
+                    + " заданий, а осталось " + remaining + '!');
+        }
+        System.out.println("Удалено " + count + " объектов.");
+        System.out.println("Осталось " + remaining + " объектов.");
+    }
 }
+
+

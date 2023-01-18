@@ -52,19 +52,6 @@ public class Manager {
         return id;
     }
 
-    /**
-     * Исправлять не стал:
-     * не вижу ничего плохого в том, чтобы ловить
-     * исключения сразу после их возникновения.
-     * Null может жить достаточно долго, и не всегда
-     * printStackTrace() отслеживает его до метода,
-     * в котором он возник. А если не прерывать программу,
-     * можно узнать, например, сколько метод этих нулей сгенерировал,
-     * что имеет большую ценность при отладке.
-     * Для того чтобы показать работу с unhandled,
-     * пробросил исключение @TaskFamily.getEnumFromClass(),
-     * Дальше пробрасывать не стал.
-     */
     static TaskFamily defineTypeById(int id) {
         TaskFamily type = null;
         int taskOrdinal = TaskFamily.TASK.ordinal();
@@ -231,9 +218,12 @@ public class Manager {
     }
 
     public static <T extends Task> void removeTask(int id) {
-        if (isFoundById(id)) {
+        try {
+            if (!isFoundById(id)) {
+                throw new NoMatchesFoundException("ID не нашлось!");
+            } else {
             T task = getTask(id);
-            try {
+
                 switch (defineTypeById(id)) {
                     case SUBTASK:
                         SubTask subTask = (SubTask) task;
@@ -251,18 +241,10 @@ public class Manager {
                         tasks.get(TaskFamily.getEnumFromClass(task.getClass())).remove(id);
                         break;
                 }
-            } catch (NoMatchesFoundException e) {
-                e.printStackTrace();
-                System.out.println("В этом методе 3 ссылки на метод, который кидает исключение.");
             }
+        } catch (NoMatchesFoundException e) {
+            e.printStackTrace();
+            System.out.println("В этом методе 3 ссылки на метод, который кидает исключение.");
         }
     }
 }
-        /* Возможность хранить задачи всех типов. Для этого вам нужно выбрать подходящую коллекцию.
-        Методы для каждого из типа задач(Задача/Эпик/Подзадача):
-
-        Удаление по идентификатору.
-        Управление статусами осуществляется по следующему правилу:
-        Менеджер сам не выбирает статус для задачи. Информация о нём приходит менеджеру вместе с информацией о самой задаче.
-        По этим данным в одних случаях он будет сохранять статус, в других будет рассчитывать.
-        */
