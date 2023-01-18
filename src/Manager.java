@@ -5,66 +5,98 @@ import java.util.Iterator;
 import java.util.Map;
 
 public class Manager {
-    protected static HashMap<String, HashMap<Integer, ? super Task>> tasks;//Возможность хранить задачи всех
+    static {
+        initializeTasksMap();
+
+    }
+
+    protected static HashMap<TaskFamily, HashMap<Integer, ? super Task>> tasks;//Возможность хранить задачи всех
     // типов. Для этого вам нужно выбрать подходящую коллекцию.
     private static int idCounter = 0;
 
+    /**
+     * Теперь этот метод реализуется в static блоке,
+     * и @removeAllTasks().
+     * Проверки на null и на пустую Map оставил, иначе
+     * возможна незапланированная потеря данных.
+     */
     public static void initializeTasksMap() {
         if (tasks == null || tasks.isEmpty()) {
             tasks = new HashMap<>();
-            tasks.put("Task", new HashMap<>());
-            tasks.put("EpicTask", new HashMap<>());
-            tasks.put("SubTask", new HashMap<>());
+            tasks.put(TaskFamily.TASK, new HashMap<>());
+            tasks.put(TaskFamily.EPICTASK, new HashMap<>());
+            tasks.put(TaskFamily.SUBTASK, new HashMap<>());
         }
     }
 
     static int generateId(Task task) {
         DecimalFormat df = new DecimalFormat("00000");
-        int id;
-
-        switch (task.getClass().getName()) {
-            case "Task":
-                id = Integer.parseInt(1 + df.format(idCounter++));
-                break;
-            case "EpicTask":
-                id = Integer.parseInt(2 + df.format(idCounter++));
-                break;
-            case "SubTask":
-                id = Integer.parseInt(3 + df.format(idCounter++));
-                break;
-            default:
-                id = 0;
+        int id = 0;
+        try {
+            switch (TaskFamily.getEnumFromClass(task.getClass())) {
+                case TASK:
+                    id = Integer.parseInt((TaskFamily.TASK.ordinal() + 1) + df.format(idCounter++));
+                    break;
+                case EPICTASK:
+                    id = Integer.parseInt((TaskFamily.EPICTASK.ordinal() + 1) + df.format(idCounter++));
+                    break;
+                case SUBTASK:
+                    id = Integer.parseInt((TaskFamily.SUBTASK.ordinal() + 1) + df.format(idCounter++));
+                    break;
+            }
+        } catch (NoMatchesFoundException e) {
+            e.printStackTrace();
+            System.out.println("В этом методе 1 ссылка на метод, который кидает исключение.");
+            ;
         }
         return id;
     }
 
-    static String defineTypeById(int id) {
-        String type = null;
+    /**
+     * Исправлять не стал:
+     * не вижу ничего плохого в том, чтобы ловить 
+     * исключения сразу после их возникновения.
+     * Null может жить достаточно долго, и не всегда
+     * printStackTrace() отслеживает его до метода,
+     * в котором он возник. А если не прерывать программу,
+     * можно узнать, например, сколько метод этих нулей сгенерировал,
+     * что имеет большую ценность при отладке.
+     * Для того чтобы показать работу с unhandled,
+     * пробросил исключение @TaskFamily.getEnumFromClass(),
+     * Дальше пробрасывать не стал.
+     */
+    static TaskFamily defineTypeById(int id) {
+        TaskFamily type = null;
+        int taskOrdinal = TaskFamily.TASK.ordinal();
+        int epicTaskOrdinal = TaskFamily.EPICTASK.ordinal();
+        int subTaskOrdinal = TaskFamily.SUBTASK.ordinal();
+        int idToOrdinal = Integer.parseInt(String.valueOf(Integer.toString(id).charAt(0))) - 1;
 
         try {
-            switch (Integer.toString(id).charAt(0)) {
-                case '1':
-                    type = "Task";
-                    break;
-                case '2':
-                    type = "EpicTask";
-                    break;
-                case '3':
-                    type = "SubTask";
-                    break;
-                default:
-                    throw new Exception("Сектор \"банкрот\" на барабане!");
+            if (idToOrdinal == taskOrdinal) {
+                type = TaskFamily.TASK;
+            } else if (idToOrdinal == epicTaskOrdinal) {
+                type = TaskFamily.EPICTASK;
+            } else if (idToOrdinal == subTaskOrdinal) {
+                type = TaskFamily.SUBTASK;
+            } else {
+                throw new NoMatchesFoundException("Сектор \"банкрот\" на барабане!");
             }
-        } catch (Exception e) {
+        } catch (NoMatchesFoundException e) {
             System.out.println("type=null, defineTypeById=null");
             e.printStackTrace();
-            System.exit(1);
         }
         return type;
     }
 
-    public static <T extends Task> void createTask(T task) {//Создание.
-        // Сам объект должен передаваться в качестве параметра.
+    /**
+     * Этот метод оставил как есть, т.к. по ТЗ:
+     * "Создание. Сам объект должен передаваться в качестве параметра."
+     * Это не моя прихоть, а неудачный дизайн проекта, ИМХО.
+     * Я бы и метод @generateId(T task) написал бы в классе Task
+     * и переопределил для каждого субкласса. Потом вызывал бы в конструкторе.
+     */
+    public static <T extends Task> void createTask(T task) {
         task.setName("Default");
         task.setDescription("No description");
         task.setId(generateId(task));
@@ -72,15 +104,19 @@ public class Manager {
     }
 
     static <T extends Task> void putTaskToMap(T task) {
-        initializeTasksMap();
-        switch (task.getClass().getName()) {
-            case "SubTask":
-                SubTask subTask = (SubTask) task;
-                subTask.getMyEpic().getMySubTaskMap().put(subTask.getId(), subTask);
-            case "EpicTask":
-            case "Task":
-                tasks.get(task.getClass().getName()).put(task.getId(), task);
-                break;
+        try {
+            switch (TaskFamily.getEnumFromClass(task.getClass())) {
+                case SUBTASK:
+                    SubTask subTask = (SubTask) task;
+                    subTask.getMyEpic().getMySubTaskMap().put(subTask.getId(), subTask);
+                case EPICTASK:
+                case TASK:
+                    tasks.get(TaskFamily.getEnumFromClass(task.getClass())).put(task.getId(), task);
+                    break;
+            }
+        } catch (NoMatchesFoundException e) {
+            e.printStackTrace();
+            System.out.println("В этом методе 2 ссылки на метод, который кидает исключение.");
         }
     }
 
@@ -89,15 +125,15 @@ public class Manager {
         putTaskToMap(task);
     }
 
-    static boolean isFoundType(String type) {
+    static boolean isFoundType(TaskFamily type) {
         try {
-            for (String taskType : tasks.keySet()) {
+            for (TaskFamily taskType : tasks.keySet()) {
                 if (type.equals(taskType)) {
                     return true;
                 }
             }
-            throw new Exception("Задач типа " + type + " не существует!");
-        } catch (Exception e) {
+            throw new NoMatchesFoundException("Задач типа " + type + " не существует!");
+        } catch (NoMatchesFoundException e) {
             System.out.println("Доступные типы задач:\n"
                     + tasks.keySet());
             e.printStackTrace();
@@ -105,7 +141,7 @@ public class Manager {
         return false;
     }
 
-    public static ArrayList<String> getTaskList(String type) {//Получение списка всех задач.
+    public static ArrayList<String> getTaskList(TaskFamily type) {//Получение списка всех задач.
         ArrayList<String> taskList = new ArrayList<>();
         Iterator<? extends Map.Entry<Integer, ? super Task>> iterator;
 
@@ -120,7 +156,7 @@ public class Manager {
 
     public static ArrayList<String> getTaskList() {
         ArrayList<String> taskList = new ArrayList<>();
-        Iterator<Map.Entry<String, HashMap<Integer, ? super Task>>> iterator;
+        Iterator<Map.Entry<TaskFamily, HashMap<Integer, ? super Task>>> iterator;
         iterator = tasks.entrySet().iterator();
 
         iterator.forEachRemaining(E -> {
@@ -133,7 +169,7 @@ public class Manager {
         return taskList;
     }
 
-    public static void removeAllTasks(String type) {//Удаление всех задач.
+    public static void removeAllTasks(TaskFamily type) {//Удаление всех задач.
         if (isFoundType(type)) {
             tasks.get(type).clear();
         }
@@ -141,6 +177,7 @@ public class Manager {
 
     public static void removeAllTasks() {
         tasks.clear();
+        initializeTasksMap();
     }
 
     public static ArrayList<String> getEpicSubsList(EpicTask epic) { //Получение списка
@@ -164,9 +201,9 @@ public class Manager {
         }
         try {
             if (task == null) {
-                throw new Exception("Сектор \"банкрот\" на барабане!");
+                throw new NoMatchesFoundException("Сектор \"банкрот\" на барабане!");
             }
-        } catch (Exception e) {
+        } catch (NoMatchesFoundException e) {
             System.out.println("task=null, isFoundById=false");
             e.printStackTrace();
             return false;
@@ -188,21 +225,27 @@ public class Manager {
     public static <T extends Task> void removeTask(int id) {
         if (isFoundById(id)) {
             T task = getTask(id);
-            switch (defineTypeById(id)) {
-                case "SubTask":
-                    SubTask subTask = (SubTask) task;
-                    subTask.getMyEpic().getMySubTaskMap().remove(id);
-                    tasks.get(task.getClass().getName()).remove(id);
-                    break;
-                case "EpicTask":
-                    EpicTask epic = (EpicTask) task;
-                    for (SubTask mySub : epic.getMySubTaskMap().values()) {
-                        mySub.removeMyEpicLink();// это для GRC
-                        tasks.get(mySub.getClass().getName()).remove(mySub.getId());
-                    }
-                case "Task":
-                    tasks.get(task.getClass().getName()).remove(id);
-                    break;
+            try {
+                switch (defineTypeById(id)) {
+                    case SUBTASK:
+                        SubTask subTask = (SubTask) task;
+                        subTask.getMyEpic().getMySubTaskMap().remove(id);
+                        tasks.get(TaskFamily.getEnumFromClass(task.getClass())).remove(id);
+                        break;
+                    case EPICTASK:
+                        EpicTask epic = (EpicTask) task;
+                        for (SubTask mySub : epic.getMySubTaskMap().values()) {
+                            mySub.removeMyEpicLink();// это для GC
+                            tasks.get(TaskFamily.getEnumFromClass(mySub.getClass())).remove(mySub.getId());
+                            epic.removeMySubTaskMap();// это тоже для GC
+                        }
+                    case TASK:
+                        tasks.get(TaskFamily.getEnumFromClass(task.getClass())).remove(id);
+                        break;
+                }
+            } catch (NoMatchesFoundException e) {
+                e.printStackTrace();
+                System.out.println("В этом методе 3 ссылки на метод, который кидает исключение.");
             }
         }
     }

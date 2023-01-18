@@ -1,4 +1,5 @@
 import java.util.Random;
+import java.util.ArrayList;
 
 public class TestManager extends Manager {
 
@@ -7,7 +8,11 @@ public class TestManager extends Manager {
 Измените статусы созданных объектов, распечатайте. Проверьте, что статус задачи и подзадачи сохранился,
 а статус эпика рассчитался по статусам подзадач.
 И, наконец, попробуйте удалить одну из задач и один из эпиков.  */
-    public static void iAmMainHereAndIWillTakeYourArgsByForce(String[] args) {
+
+    /**
+     * поменял название на test0
+     */
+    public static void test0 () {
         createTask(new Task(),randomTaskNameCreator());
         createTask(new Task(),randomTaskNameCreator());
         createTask(new EpicTask(),randomTaskNameCreator());
@@ -67,9 +72,7 @@ public class TestManager extends Manager {
         }
     }
     static String randomStatus() {
-        Random r = new Random();
-        String[] statuses = {"NEW", "IN_PROGRESS", "DONE"};
-
-        return statuses[r.nextInt(statuses.length)];
+        Random random = new Random();
+        return Statuses.values()[random.nextInt(Statuses.values().length)].toString();
     }
 }

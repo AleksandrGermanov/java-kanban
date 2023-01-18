@@ -5,12 +5,9 @@ public class Task {
     protected String description;
     protected int Id;
     protected String status;
-    protected final static String NEW = "NEW";
-    protected final static String IN_PROGRESS = "IN_PROGRESS";
-    protected final static String DONE = "DONE";
 
     public Task(){
-        status = NEW;
+        status = Statuses.NEW.toString();
     }
 
     public void setName(String name) {

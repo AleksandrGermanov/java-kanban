@@ -26,7 +26,7 @@ public class EpicTask extends Task {
     во всех остальных случаях статус должен быть IN_PROGRESS.*/
     public void setStatus() {
         if (mySubTaskMap.isEmpty()) {
-            status = NEW;
+            status = Statuses.NEW.toString();
             return;
         }
 
@@ -34,26 +34,26 @@ public class EpicTask extends Task {
         int doneCounter = 0;
 
         for (SubTask subTask : mySubTaskMap.values()) {
-            if (subTask.getStatus().equals(NEW)) {
+            if (subTask.getStatus().equals(Statuses.NEW.toString())) {
                 ++newCounter;
             }
-            if (subTask.getStatus().equals(DONE)) {
+            if (subTask.getStatus().equals(Statuses.DONE.toString())) {
                 ++doneCounter;
             }
         }
         if (newCounter == mySubTaskMap.size()) {
-            status = NEW;
+            status = Statuses.NEW.toString();
         } else if (doneCounter == mySubTaskMap.size()) {
-            status = DONE;
+            status = Statuses.DONE.toString();
         } else {
-            status = IN_PROGRESS;
+            status = Statuses.IN_PROGRESS.toString();
         }
     }
     @Override
     public void setStatus(String status) {
         try {
-            throw new Exception("Хорошая попытка, но статус эпиков не может быть установлен в ручную!");
-        } catch (Exception e) {
+            throw new NoMatchesFoundException("Хорошая попытка, но статус эпиков не может быть установлен в ручную!");
+        } catch (NoMatchesFoundException e) {
             e.printStackTrace();
             setStatus();
         }
@@ -78,9 +78,13 @@ public class EpicTask extends Task {
         return "EpicTask{mySubTaskMap.size=" + mySubTaskMap.size()
                 + ", mySubTaskMap.keySet=" + mySubTaskMap.keySet()
                 + ", name='" + name + '\''
-                + ", description='" + description + '\''
+                + "^\b, description='" + description + '\''
                 + ", Id=" + Id +
                 ", status='" + status + '\'' + "}^\b";
+    }
+
+    public void removeMySubTaskMap(){
+        mySubTaskMap = null;
     }
 }
 /*  Каждый эпик знает, какие подзадачи в него входят.
