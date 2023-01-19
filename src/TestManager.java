@@ -5,13 +5,13 @@ public class TestManager extends Manager {
     static Random random = new Random();
 
     public static void test0() {
-        createTask(new Task());
-        createTask(new Task());
-        createTask(new EpicTask());
-        createTask(new SubTask(getTask(200002)));
-        createTask(new SubTask(getTask(200002)));
-        createTask(new EpicTask());
-        createTask(new SubTask(getTask(200005)));
+        createRandomTask(new Task());
+        createRandomTask(new Task());
+        createRandomTask(new EpicTask());
+        createRandomTask(new SubTask(getTask(200002)));
+        createRandomTask(new SubTask(getTask(200002)));
+        createRandomTask(new EpicTask());
+        createRandomTask(new SubTask(getTask(200005)));
         System.out.println(getTaskList());
         changeTask(100000);
         changeTask(300006);
@@ -45,6 +45,11 @@ public class TestManager extends Manager {
         System.out.println(getTaskList());
     }
 
+    public static <T extends Task> void createRandomTask(T task) {
+        task.setName(TestManager.randomTaskNameCreator());
+        task.setDescription("Нужно просто пойти и " + task.getName());
+        createTask(task);
+    }
 
     static String randomTaskNameCreator() {
         String[] word1 = {"помыть", "купить", "убрать", "разобрать", "приготовить"};
@@ -93,6 +98,7 @@ public class TestManager extends Manager {
 
     public static void createRandomTasks(int quantity) {
         ArrayList<Integer> epicsList = new ArrayList<>();
+        int count = 0;
 
         for (int i = 0; i < quantity; i++) {
             switch (TaskFamily.values()[random.nextInt(TaskFamily.values().length)]) {
@@ -104,21 +110,24 @@ public class TestManager extends Manager {
                             if (!epicsList.contains(id)) epicsList.add(id);
                         }
                         randomEpicId = epicsList.get(random.nextInt(epicsSize));
-                        createTask(new SubTask(getTask(randomEpicId)));
+                        createRandomTask(new SubTask(getTask(randomEpicId)));
+                        ++count;
                         break;
                     }
                 case TASK:
                 case EPICTASK:
                     if (coin()) {//нужна, чтобы итерации на несозданные SubTask распределялись равномерно
                         // между Task и EpicTask
-                        createTask(new Task());
+                        createRandomTask(new Task());
                     } else {
-                        createTask(new EpicTask());
+                        createRandomTask(new EpicTask());
                     }
+                    ++count;
                     break;
             }
         }
-        System.out.println("Создано " + countAllTasks() + " объектов.");
+        System.out.println("Создано " + count + " объектов.");
+        System.out.println("Общее количество заданий " + countAllTasks() + ".");
     }
 
     public static ArrayList<Integer> getAllKeysList() {

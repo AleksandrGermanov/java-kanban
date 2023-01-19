@@ -7,7 +7,11 @@ public class SubTask extends Task {
     public SubTask(EpicTask epic) { //Subtask не бываетет без эпика
         super();
         myEpic = epic;
+    }
 
+    public SubTask(EpicTask epic, String name, String description){
+        super(name, description);
+        myEpic = epic;
     }
 
     public EpicTask getMyEpic() {

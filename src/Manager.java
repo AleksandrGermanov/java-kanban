@@ -7,19 +7,11 @@ import java.util.Map;
 public class Manager {
     static {
         initializeTasksMap();
-
     }
 
-    protected static HashMap<TaskFamily, HashMap<Integer, ? super Task>> tasks;//Возможность хранить задачи всех
-    // типов. Для этого вам нужно выбрать подходящую коллекцию.
+    protected static HashMap<TaskFamily, HashMap<Integer, ? super Task>> tasks;
     private static int idCounter = 0;
 
-    /**
-     * Теперь этот метод реализуется в static блоке,
-     * и @removeAllTasks().
-     * Проверки на null и на пустую Map оставил, иначе
-     * возможна незапланированная потеря данных.
-     */
     public static void initializeTasksMap() {
         if (tasks == null || tasks.isEmpty()) {
             tasks = new HashMap<>();
@@ -77,23 +69,16 @@ public class Manager {
     }
 
     /**
-     * Вячеслав, спасибо за разъяснения.
-     * Этот метод все равно надо параметризовать
-     * (например enum'ом), иначе непонятно,
-     * какого класса Task мы хотим создать. К тому же,
-     * чтобы создать Subtask, обязательным условием является наличие
-     * эпика, прийдется в ручную это указывать(передавать аргументом) -
-     * метод надо будет перегружать. Либо делать отдельный
-     * метод для каждого класса.
-     * А вот перегруженный метод в TestManager действительно не нужен.
-     * А создание рандомных Task'ов смотри @TestManager.task1().
+     * метод теперь может принимать как объекты с пустыми полями класса,
+     * так и с заполненными
      */
     public static <T extends Task> void createTask(T task) {
-        //Допустим параметров нет:
-        //T task = ?
-        String name = TestManager.randomTaskNameCreator();
-        task.setName(name);
-        task.setDescription("Нужно просто пойти и " + name);
+        if (task.getName() == null) {
+            task.setName("Default");
+        }
+        if (task.getDescription() == null) {
+            task.setDescription("No description");
+        }
         task.setId(generateId(task));
         putTaskToMap(task);
     }
@@ -222,7 +207,7 @@ public class Manager {
             if (!isFoundById(id)) {
                 throw new NoMatchesFoundException("ID не нашлось!");
             } else {
-            T task = getTask(id);
+                T task = getTask(id);
 
                 switch (defineTypeById(id)) {
                     case SUBTASK:
