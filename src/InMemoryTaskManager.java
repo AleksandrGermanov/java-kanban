@@ -210,6 +210,24 @@ public class InMemoryTaskManager implements TaskManager {
         return task;
     }
 
+    /**
+     * Перегружаем метод getTask,
+     * подробнее про то, зачем это нужно - см.
+     * в интерфейсе @HistoryManager
+     */
+    public <T extends Task> T getTask(int id, HistoryManager histMan) {//Получение по идентификатору
+        T task = null;
+        if (isFoundById(id))
+            for (int index : tasks.get(defineTypeById(id)).keySet()) {
+                if (index == id) {
+                    task = (T) tasks.get(defineTypeById(id)).get(id);
+                    break;
+                }
+            }
+        histMan.add(task);
+        return task;
+    }
+
     @Override
     public <T extends Task> void removeTask(int id) {
         try {
