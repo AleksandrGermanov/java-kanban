@@ -172,7 +172,7 @@ public class TestManager extends Manager {
             System.out.println("Объекты будут удаляться, пока не останется ни одного!");
         } else {
             System.out.println("Эпик сам удаляет свои субтаски, поэтому результат"
-                    + "может отличаться от запланированного.");
+                    + " может отличаться от запланированного.");
         }
         while ((remaining > plannedRemaining) && !allKeys.isEmpty()) {
             id = allKeys.get(random.nextInt(allKeys.size()));
