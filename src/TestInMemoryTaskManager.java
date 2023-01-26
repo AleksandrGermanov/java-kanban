@@ -1,10 +1,10 @@
 import java.util.ArrayList;
 import java.util.Random;
 
-public class TestManager extends Manager {
+public class TestInMemoryTaskManager extends InMemoryTaskManager {
     static Random random = new Random();
 
-    public static void test0() {
+    public void test0() {
         createRandomTask(new Task());
         createRandomTask(new Task());
         createRandomTask(new EpicTask());
@@ -23,7 +23,7 @@ public class TestManager extends Manager {
         System.out.println(getTaskList());
     }
 
-    public static void test1(int quantity) {
+    public void test1(int quantity) {
         createRandomTasks(quantity);
         System.out.println(getTaskList());
         changeRandomTasks(50);
@@ -34,7 +34,7 @@ public class TestManager extends Manager {
         System.out.println(getTaskList());
     }
 
-    public static void test1(int quantity, int percentOfChanges, int percentOfRemoves) {
+    public void test1(int quantity, int percentOfChanges, int percentOfRemoves) {
         createRandomTasks(quantity);
         System.out.println(getTaskList());
         changeRandomTasks(percentOfChanges);
@@ -45,8 +45,8 @@ public class TestManager extends Manager {
         System.out.println(getTaskList());
     }
 
-    public static <T extends Task> void createRandomTask(T task) {
-        task.setName(TestManager.randomTaskNameCreator());
+    public <T extends Task> void createRandomTask(T task) {
+        task.setName(TestInMemoryTaskManager.randomTaskNameCreator());
         task.setDescription("Нужно просто пойти и " + task.getName());
         createTask(task);
     }
@@ -61,7 +61,7 @@ public class TestManager extends Manager {
                 + ' ' + word3[random.nextInt(word3.length)]);
     }
 
-    public static <T extends Task> void changeTask(int id) {
+    public <T extends Task> void changeTask(int id) {
         T task = getTask(id);
 
         task.setName("New name:" + randomTaskNameCreator());
@@ -88,7 +88,7 @@ public class TestManager extends Manager {
         return random.nextInt(2) == 0;
     }
 
-    public static int countAllTasks() {
+    public int countAllTasks() {
         int sum = 0;
         for (TaskFamily tf : TaskFamily.values()) {
             sum += tasks.get(tf).size();
@@ -96,7 +96,7 @@ public class TestManager extends Manager {
         return sum;
     }
 
-    public static void createRandomTasks(int quantity) {
+    public void createRandomTasks(int quantity) {
         ArrayList<Integer> epicsList = new ArrayList<>();
         int count = 0;
 
@@ -130,7 +130,7 @@ public class TestManager extends Manager {
         System.out.println("Общее количество заданий " + countAllTasks() + ".");
     }
 
-    public static ArrayList<Integer> getAllKeysList() {
+    public ArrayList<Integer> getAllKeysList() {
         ArrayList<Integer> list = new ArrayList<>();
 
         for (TaskFamily tf : TaskFamily.values()) {
@@ -141,7 +141,7 @@ public class TestManager extends Manager {
         return list;
     }
 
-    public static void changeRandomTasks(int percentage) {
+    public void changeRandomTasks(int percentage) {
         ArrayList<Integer> allKeys = getAllKeysList();
         Integer id;
         int count = 0;
@@ -161,7 +161,7 @@ public class TestManager extends Manager {
         System.out.println("Изменено " + count + " объектов.");
     }
 
-    public static void removeRandomTasks(int percentage) {
+    public void removeRandomTasks(int percentage) {
         ArrayList<Integer> allKeys = getAllKeysList();
         Integer id;
         int count = 0;

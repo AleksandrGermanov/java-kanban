@@ -4,15 +4,16 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-public class Manager {
-    static {
-        initializeTasksMap();
-    }
+public class InMemoryTaskManager implements TaskManager{
 
-    protected static HashMap<TaskFamily, HashMap<Integer, ? super Task>> tasks;
+    protected HashMap<TaskFamily, HashMap<Integer, ? super Task>> tasks;
     private static int idCounter = 0;
 
-    public static void initializeTasksMap() {
+    public InMemoryTaskManager(){
+        initializeTasksMap();
+    }
+    @Override
+    public void initializeTasksMap() {
         if (tasks == null || tasks.isEmpty()) {
             tasks = new HashMap<>();
             tasks.put(TaskFamily.TASK, new HashMap<>());
@@ -21,7 +22,8 @@ public class Manager {
         }
     }
 
-    static int generateId(Task task) {
+    @Override
+    public int generateId(Task task) {
         DecimalFormat df = new DecimalFormat("00000");
         int id = 0;
         try {
@@ -39,12 +41,12 @@ public class Manager {
         } catch (NoMatchesFoundException e) {
             e.printStackTrace();
             System.out.println("В этом методе 1 ссылка на метод, который кидает исключение.");
-            ;
         }
         return id;
     }
 
-    static TaskFamily defineTypeById(int id) {
+    @Override
+    public TaskFamily defineTypeById(int id) {
         TaskFamily type = null;
         int taskOrdinal = TaskFamily.TASK.ordinal();
         int epicTaskOrdinal = TaskFamily.EPICTASK.ordinal();
@@ -68,11 +70,8 @@ public class Manager {
         return type;
     }
 
-    /**
-     * метод теперь может принимать как объекты с пустыми полями класса,
-     * так и с заполненными
-     */
-    public static <T extends Task> void createTask(T task) {
+    @Override
+       public <T extends Task> void createTask(T task) {
         if (task.getName() == null) {
             task.setName("Default");
         }
@@ -83,7 +82,8 @@ public class Manager {
         putTaskToMap(task);
     }
 
-    static <T extends Task> void putTaskToMap(T task) {
+    @Override
+    public <T extends Task> void putTaskToMap(T task) {
         try {
             switch (TaskFamily.getEnumFromClass(task.getClass())) {
                 case SUBTASK:
@@ -100,12 +100,14 @@ public class Manager {
         }
     }
 
-    public static <T extends Task> void renewTask(T task) {//Обновление.
+    @Override
+    public <T extends Task> void renewTask(T task) {//Обновление.
         // Новая версия объекта с верным идентификатором передаётся в виде параметра.
         putTaskToMap(task);
     }
 
-    static boolean isFoundType(TaskFamily type) {
+    @Override
+    public boolean isFoundType(TaskFamily type) {
         try {
             for (TaskFamily taskType : tasks.keySet()) {
                 if (type.equals(taskType)) {
@@ -121,7 +123,8 @@ public class Manager {
         return false;
     }
 
-    public static ArrayList<String> getTaskList(TaskFamily type) {//Получение списка всех задач.
+    @Override
+    public ArrayList<String> getTaskList(TaskFamily type) {//Получение списка всех задач.
         ArrayList<String> taskList = new ArrayList<>();
         Iterator<? extends Map.Entry<Integer, ? super Task>> iterator;
 
@@ -134,7 +137,8 @@ public class Manager {
         return taskList;
     }
 
-    public static ArrayList<String> getTaskList() {
+    @Override
+    public ArrayList<String> getTaskList() {
         ArrayList<String> taskList = new ArrayList<>();
         Iterator<Map.Entry<TaskFamily, HashMap<Integer, ? super Task>>> iterator;
         iterator = tasks.entrySet().iterator();
@@ -149,23 +153,27 @@ public class Manager {
         return taskList;
     }
 
-    public static void removeAllTasks(TaskFamily type) {//Удаление всех задач.
+    @Override
+    public void removeAllTasks(TaskFamily type) {//Удаление всех задач.
         if (isFoundType(type)) {
             tasks.get(type).clear();
         }
     }
 
-    public static void removeAllTasks() {
+    @Override
+    public void removeAllTasks() {
         tasks.clear();
         initializeTasksMap();
     }
 
-    public static ArrayList<String> getEpicSubsList(EpicTask epic) { //Получение списка
+    @Override
+    public ArrayList<String> getEpicSubsList(EpicTask epic) { //Получение списка
         // всех подзадач определённого эпика.
         return epic.getMySubTaskList();
     }
 
-    static boolean isFoundById(int id) {
+    @Override
+    public boolean isFoundById(int id) {
         Object task = null;
         boolean found = false;
 
@@ -191,7 +199,8 @@ public class Manager {
         return true;
     }
 
-    public static <T extends Task> T getTask(int id) {//Получение по идентификатору
+    @Override
+    public <T extends Task> T getTask(int id) {//Получение по идентификатору
         T task = null;
         if (isFoundById(id))
             for (int index : tasks.get(defineTypeById(id)).keySet()) {
@@ -202,7 +211,8 @@ public class Manager {
         return task;
     }
 
-    public static <T extends Task> void removeTask(int id) {
+    @Override
+    public <T extends Task> void removeTask(int id) {
         try {
             if (!isFoundById(id)) {
                 throw new NoMatchesFoundException("ID не нашлось!");

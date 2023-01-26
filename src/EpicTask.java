@@ -54,8 +54,8 @@ public class EpicTask extends Task {
     @Override
     public void setStatus(String status) {
         try {
-            throw new NoMatchesFoundException("Хорошая попытка, но статус эпиков не может быть установлен в ручную!");
-        } catch (NoMatchesFoundException e) {
+            throw new Exception("Хорошая попытка, но статус эпиков не может быть установлен в ручную!");
+        } catch (Exception e) {
             e.printStackTrace();
             setStatus();
         }
