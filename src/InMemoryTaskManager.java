@@ -3,16 +3,20 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-
-public class InMemoryTaskManager implements TaskManager{
+/*
+Созданный ранее класс менеджера нужно переименовать в InMemoryTaskManager.
+Внутри класса должна остаться реализация методов.
+При этом важно не забыть имплементировать TaskManager.
+*/
+public class InMemoryTaskManager implements TaskManager {
 
     protected HashMap<TaskFamily, HashMap<Integer, ? super Task>> tasks;
     private static int idCounter = 0;
 
-    public InMemoryTaskManager(){
+    public InMemoryTaskManager() {
         initializeTasksMap();
     }
-    @Override
+
     public void initializeTasksMap() {
         if (tasks == null || tasks.isEmpty()) {
             tasks = new HashMap<>();
@@ -45,7 +49,6 @@ public class InMemoryTaskManager implements TaskManager{
         return id;
     }
 
-    @Override
     public TaskFamily defineTypeById(int id) {
         TaskFamily type = null;
         int taskOrdinal = TaskFamily.TASK.ordinal();
@@ -71,7 +74,7 @@ public class InMemoryTaskManager implements TaskManager{
     }
 
     @Override
-       public <T extends Task> void createTask(T task) {
+    public <T extends Task> void createTask(T task) {
         if (task.getName() == null) {
             task.setName("Default");
         }
@@ -82,7 +85,6 @@ public class InMemoryTaskManager implements TaskManager{
         putTaskToMap(task);
     }
 
-    @Override
     public <T extends Task> void putTaskToMap(T task) {
         try {
             switch (TaskFamily.getEnumFromClass(task.getClass())) {
@@ -106,7 +108,6 @@ public class InMemoryTaskManager implements TaskManager{
         putTaskToMap(task);
     }
 
-    @Override
     public boolean isFoundType(TaskFamily type) {
         try {
             for (TaskFamily taskType : tasks.keySet()) {
@@ -166,13 +167,11 @@ public class InMemoryTaskManager implements TaskManager{
         initializeTasksMap();
     }
 
-    @Override
     public ArrayList<String> getEpicSubsList(EpicTask epic) { //Получение списка
         // всех подзадач определённого эпика.
         return epic.getMySubTaskList();
     }
 
-    @Override
     public boolean isFoundById(int id) {
         Object task = null;
         boolean found = false;
