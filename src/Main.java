@@ -8,7 +8,7 @@ public class Main {
 
     public Main() {
         TaskManager taskMan = Managers.getDefault();
-        HistoryManager histMan = new InMemoryHistoryManager();
+        HistoryManager histMan = Managers.getDefaultHistory();
         TestInMemoryTaskManager testImtm = new TestInMemoryTaskManager();
         Random random = new Random();
 
