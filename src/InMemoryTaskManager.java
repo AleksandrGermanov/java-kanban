@@ -3,6 +3,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+
 /*
 Созданный ранее класс менеджера нужно переименовать в InMemoryTaskManager.
 Внутри класса должна остаться реализация методов.
@@ -10,11 +11,14 @@ import java.util.Map;
 */
 public class InMemoryTaskManager implements TaskManager {
 
-    protected HashMap<TaskFamily, HashMap<Integer, ? super Task>> tasks;
+    protected static HashMap<TaskFamily, HashMap<Integer, ? super Task>> tasks;
+
+    HistoryManager histMan;
     private static int idCounter = 0;
 
     public InMemoryTaskManager() {
         initializeTasksMap();
+        histMan = Managers.getDefaultHistory();
     }
 
     public void initializeTasksMap() {
@@ -26,22 +30,12 @@ public class InMemoryTaskManager implements TaskManager {
         }
     }
 
-    @Override
     public int generateId(Task task) {
         DecimalFormat df = new DecimalFormat("00000");
         int id = 0;
         try {
-            switch (TaskFamily.getEnumFromClass(task.getClass())) {
-                case TASK:
-                    id = Integer.parseInt((TaskFamily.TASK.ordinal() + 1) + df.format(idCounter++));
-                    break;
-                case EPICTASK:
-                    id = Integer.parseInt((TaskFamily.EPICTASK.ordinal() + 1) + df.format(idCounter++));
-                    break;
-                case SUBTASK:
-                    id = Integer.parseInt((TaskFamily.SUBTASK.ordinal() + 1) + df.format(idCounter++));
-                    break;
-            }
+            TaskFamily TF = TaskFamily.getEnumFromClass(task.getClass());
+            id = Integer.parseInt((TF.ordinal() + 1) + df.format(idCounter++));
         } catch (NoMatchesFoundException e) {
             e.printStackTrace();
             System.out.println("В этом методе 1 ссылка на метод, который кидает исключение.");
@@ -199,23 +193,13 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     @Override
-    public <T extends Task> T getTask(int id) {//Получение по идентификатору
-        T task = null;
-        if (isFoundById(id))
-            for (int index : tasks.get(defineTypeById(id)).keySet()) {
-                if (index == id) {
-                    task = (T) tasks.get(defineTypeById(id)).get(id);
-                }
-            }
+    public <T extends Task> T getTask(int id) {
+        T task = getTaskNH(id);
+        histMan.add(task);
         return task;
     }
 
-    /**
-     * Перегружаем метод getTask,
-     * подробнее про то, зачем это нужно - см.
-     * в интерфейсе @HistoryManager
-     */
-    public <T extends Task> T getTask(int id, HistoryManager histMan) {//Получение по идентификатору
+    public <T extends Task> T getTaskNH(int id) {//NH - no History
         T task = null;
         if (isFoundById(id))
             for (int index : tasks.get(defineTypeById(id)).keySet()) {
@@ -224,7 +208,6 @@ public class InMemoryTaskManager implements TaskManager {
                     break;
                 }
             }
-        histMan.add(task);
         return task;
     }
 
@@ -234,12 +217,13 @@ public class InMemoryTaskManager implements TaskManager {
             if (!isFoundById(id)) {
                 throw new NoMatchesFoundException("ID не нашлось!");
             } else {
-                T task = getTask(id);
+                T task = getTaskNH(id);
 
                 switch (defineTypeById(id)) {
                     case SUBTASK:
                         SubTask subTask = (SubTask) task;
                         subTask.getMyEpic().getMySubTaskMap().remove(id);
+                        subTask.getMyEpic().setStatus();
                         tasks.get(TaskFamily.getEnumFromClass(task.getClass())).remove(id);
                         break;
                     case EPICTASK:

@@ -2,10 +2,12 @@ import java.util.ArrayList;
 
 public class InMemoryHistoryManager implements HistoryManager {
     //    Новый класс InMemoryHistoryManager должен реализовывать интерфейс HistoryManager.
-    ArrayList<? super Task> historyList;
+    static ArrayList<? super Task> historyList;
 
     public InMemoryHistoryManager() {
-        historyList = new ArrayList<>(10);
+        if (historyList == null) {
+            historyList = new ArrayList<>(10);
+        }
         //должен возвращать последние 10 просмотренных задач;
     }
 

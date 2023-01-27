@@ -7,8 +7,6 @@ import java.util.ArrayList;
  */
 public interface TaskManager {
 
-    int generateId(Task task);
-
     <T extends Task> void createTask(T task);
 
     <T extends Task> void renewTask(T task);

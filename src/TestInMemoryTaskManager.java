@@ -8,10 +8,10 @@ public class TestInMemoryTaskManager extends InMemoryTaskManager {
         createRandomTask(new Task());
         createRandomTask(new Task());
         createRandomTask(new EpicTask());
-        createRandomTask(new SubTask(getTask(200002)));
-        createRandomTask(new SubTask(getTask(200002)));
+        createRandomTask(new SubTask(getTaskNH(200002)));
+        createRandomTask(new SubTask(getTaskNH(200002)));
         createRandomTask(new EpicTask());
-        createRandomTask(new SubTask(getTask(200005)));
+        createRandomTask(new SubTask(getTaskNH(200005)));
         System.out.println(getTaskList());
         changeTask(100000);
         changeTask(300006);
@@ -34,14 +34,12 @@ public class TestInMemoryTaskManager extends InMemoryTaskManager {
         System.out.println(getTaskList());
     }
 
-    public void test1(int quantity, int percentOfChanges, int percentOfRemoves) {
+    public void test2(int quantity, int percentOfChanges, int percentOfRemoves) {
         createRandomTasks(quantity);
         System.out.println(getTaskList());
         changeRandomTasks(percentOfChanges);
         System.out.println(getTaskList());
         removeRandomTasks(percentOfRemoves);
-        System.out.println(getTaskList());
-        removeRandomTasks(100);
         System.out.println(getTaskList());
     }
 
@@ -62,7 +60,7 @@ public class TestInMemoryTaskManager extends InMemoryTaskManager {
     }
 
     public <T extends Task> void changeTask(int id) {
-        T task = getTask(id);
+        T task = getTaskNH(id);
 
         task.setName("New name:" + randomTaskNameCreator());
         task.setDescription("А у тебя точно получится?");
@@ -90,8 +88,8 @@ public class TestInMemoryTaskManager extends InMemoryTaskManager {
 
     public int countAllTasks() {
         int sum = 0;
-        for (TaskFamily tf : TaskFamily.values()) {
-            sum += tasks.get(tf).size();
+        for (TaskFamily TF : TaskFamily.values()) {
+            sum += tasks.get(TF).size();
         }
         return sum;
     }
@@ -110,7 +108,7 @@ public class TestInMemoryTaskManager extends InMemoryTaskManager {
                             if (!epicsList.contains(id)) epicsList.add(id);
                         }
                         randomEpicId = epicsList.get(random.nextInt(epicsSize));
-                        createRandomTask(new SubTask(getTask(randomEpicId)));
+                        createRandomTask(new SubTask(getTaskNH(randomEpicId)));
                         ++count;
                         break;
                     }
@@ -133,8 +131,8 @@ public class TestInMemoryTaskManager extends InMemoryTaskManager {
     public ArrayList<Integer> getAllKeysList() {
         ArrayList<Integer> list = new ArrayList<>();
 
-        for (TaskFamily tf : TaskFamily.values()) {
-            for (int id : tasks.get(tf).keySet()) {
+        for (TaskFamily TF : TaskFamily.values()) {
+            for (int id : tasks.get(TF).keySet()) {
                 list.add(id);
             }
         }

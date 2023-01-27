@@ -10,18 +10,11 @@ public interface HistoryManager {
     /*
         Просмотром будем считаться вызов у менеджера методов
         получения задачи по идентификатору  —
-        getTask(), getSubtask() и getEpic()
+        getTaskNH(), getSubtask() и getEpic()
         */
 
-    /**
-     * Тут вот какая проблема:
-     * метод getTask() используется, в том числе, в служебных целях,
-     * например, при создании Subtask.
-     * При этом вызове задача в просмотр добавляться не должна.
-     * Метод getTask() будет перегружен дополнительным параметром,
-     * чтобы разделить служебные вызовы и вызовы для просмотра.
-     */
-    <T extends Task> void add(T task);
+    
+    <T extends Task> void add(T task);    
 
     ArrayList<? super Task> getHistory();
 }
