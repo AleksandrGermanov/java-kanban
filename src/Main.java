@@ -1,5 +1,9 @@
 import java.util.Random;
 
+import management.Managers;
+import management.history.*;
+import management.task.*;
+import task.*;
 public class Main {
 
     static{
@@ -23,7 +27,9 @@ public class Main {
             taskMan.getTask(testImtm.getAllKeysList().get(random.nextInt(testImtm.getAllKeysList().size())));
         }
         System.out.println(histMan.getHistory());
-    }
+        InMemoryHistoryManager hm  = (InMemoryHistoryManager)histMan;
+        hm.printHistoryList();
+        }
 
     public static void main(String[] args) {
     // Я в отпуске, прошу не беспокоить :)

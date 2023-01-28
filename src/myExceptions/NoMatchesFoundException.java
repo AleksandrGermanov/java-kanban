@@ -1,3 +1,5 @@
+package myExceptions;
+
 public class NoMatchesFoundException extends Exception {
 
     public NoMatchesFoundException() {
