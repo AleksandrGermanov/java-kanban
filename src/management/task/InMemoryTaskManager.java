@@ -1,16 +1,17 @@
 package management.task;
 
+import management.Managers;
+import management.history.HistoryManager;
+import myExceptions.NoMatchesFoundException;
+import task.EpicTask;
+import task.SubTask;
+import task.Task;
+
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-
-import management.Managers;
-import myExceptions.NoMatchesFoundException;
-import management.history.*;
-import task.*;
-
 
 /*
 Созданный ранее класс менеджера нужно переименовать в InMemoryTaskManager.
@@ -19,9 +20,9 @@ import task.*;
 */
 public class InMemoryTaskManager implements TaskManager {
 
-    protected static HashMap<TaskFamily, HashMap<Integer, ? super Task>> tasks;
+    private static HashMap<TaskFamily, HashMap<Integer, ? super Task>> tasks;
 
-    HistoryManager histMan;
+    private HistoryManager histMan;
     private static int idCounter = 0;
 
     public InMemoryTaskManager() {
@@ -36,6 +37,10 @@ public class InMemoryTaskManager implements TaskManager {
             tasks.put(TaskFamily.EPICTASK, new HashMap<>());
             tasks.put(TaskFamily.SUBTASK, new HashMap<>());
         }
+    }
+
+    protected static HashMap<TaskFamily, HashMap<Integer, ? super Task>> getTasks() {
+        return tasks;
     }
 
     public int generateId(Task task) {
@@ -53,19 +58,16 @@ public class InMemoryTaskManager implements TaskManager {
 
     public TaskFamily defineTypeById(int id) {
         TaskFamily type = null;
-        int taskOrdinal = TaskFamily.TASK.ordinal();
-        int epicTaskOrdinal = TaskFamily.EPICTASK.ordinal();
-        int subTaskOrdinal = TaskFamily.SUBTASK.ordinal();
         int idToOrdinal = Integer.parseInt(String.valueOf(Integer.toString(id).charAt(0))) - 1;
 
         try {
-            if (idToOrdinal == taskOrdinal) {
-                type = TaskFamily.TASK;
-            } else if (idToOrdinal == epicTaskOrdinal) {
-                type = TaskFamily.EPICTASK;
-            } else if (idToOrdinal == subTaskOrdinal) {
-                type = TaskFamily.SUBTASK;
-            } else {
+            for (TaskFamily TF : TaskFamily.values()) {
+                if (idToOrdinal == TF.ordinal()) {
+                    type = TF;
+                    break;
+                }
+            }
+            if (type == null) {
                 throw new NoMatchesFoundException("Сектор \"банкрот\" на барабане!");
             }
         } catch (NoMatchesFoundException e) {
@@ -250,5 +252,10 @@ public class InMemoryTaskManager implements TaskManager {
             e.printStackTrace();
             System.out.println("В этом методе 3 ссылки на метод, который кидает исключение.");
         }
+    }
+
+    @Override
+    public ArrayList<? super Task> getHistory() {
+        return histMan.getHistory();
     }
 }

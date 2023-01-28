@@ -1,11 +1,13 @@
 package management.task;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Random;
 import task.*;
 
 public class TestInMemoryTaskManager extends InMemoryTaskManager {
-    static Random random = new Random();
+    private static HashMap<TaskFamily, HashMap<Integer, ? super Task>> tasks = getTasks();
+    private static Random random = new Random();
 
     public void test0() {
         createRandomTask(new Task());

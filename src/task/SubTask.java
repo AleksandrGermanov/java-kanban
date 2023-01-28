@@ -6,7 +6,7 @@ public class SubTask extends Task {
 
     private EpicTask myEpic;
 
-    public SubTask(EpicTask epic) { //Subtask не бываетет без эпика
+    public SubTask(EpicTask epic) { //Subtask не бывает без эпика
         super();
         myEpic = epic;
     }

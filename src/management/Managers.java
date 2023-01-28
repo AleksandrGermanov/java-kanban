@@ -1,12 +1,11 @@
 package management;
 
-
 import management.history.*;
 import management.task.*;
 
 public class Managers {
 /*
-    У Managersбудет метод  getDefault().
+    У Managers будет метод getDefault().
     При этом вызывающему неизвестен конкретный класс, только то,
     что объект, который возвращает getDefault(),
     реализует интерфейс TaskManager.*/

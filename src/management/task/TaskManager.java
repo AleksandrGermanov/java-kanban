@@ -26,5 +26,7 @@ public interface TaskManager {
     <T extends Task> T getTask(int id);
 
     <T extends Task> void removeTask(int id);
+
+    ArrayList<? super Task> getHistory();
 }
 
