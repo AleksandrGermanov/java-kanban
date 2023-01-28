@@ -1,3 +1,7 @@
+/*
+Вячеслав, спасибо за комментарии! :)
+ */
+
 import java.util.Random;
 
 import management.Managers;
