@@ -1,23 +1,13 @@
 package management.history;
 
 import task.Task;
-import java.util.ArrayList;
+import java.util.List;
 
 public interface HistoryManager {
-    /*
-    Создайте отдельный интерфейс для управления историей просмотров — HistoryManager.
-    У него будет два метода. Первый add(Task task) должен помечать задачи как просмотренные,
-    а второй getHistory() — возвращать их список.
-    */
 
-    /*
-        Просмотром будем считаться вызов у менеджера методов
-        получения задачи по идентификатору  —
-        getTaskNH(), getSubtask() и getEpic()
-        */
-
-    
     <T extends Task> void add(T task);
+// ...добавить метод void remove(int id) для удаления задачи из просмотра.
+    void remove(int id);
 
-    ArrayList<? super Task> getHistory();
+    List<? super Task> getHistory();
 }

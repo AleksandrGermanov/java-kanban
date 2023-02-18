@@ -3,12 +3,8 @@ package management.task;
 
 import task.*;
 import java.util.ArrayList;
+import java.util.List;
 
-/*Класс TaskManager должен стать интерфейсом.
-В нём нужно собрать список методов,
-которые должны быть у любого объекта-менеджера.  Вспомогательные методы,
-если вы их создавали, переносить в интерфейс не нужно.
- */
 public interface TaskManager {
 
     <T extends Task> void createTask(T task);
@@ -27,6 +23,6 @@ public interface TaskManager {
 
     <T extends Task> void removeTask(int id);
 
-    ArrayList<? super Task> getHistory();
+    List<? super Task> getHistory();
 }
 

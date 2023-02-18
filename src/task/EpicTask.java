@@ -1,5 +1,7 @@
 package task;
 
+import myExceptions.IllegalStatusChangeException;
+
 import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -27,7 +29,6 @@ public class EpicTask extends Task {
         ArrayList<String> taskList = new ArrayList<>();
         Iterator<Map.Entry<Integer, SubTask>> iterator;
         iterator = mySubTaskMap.entrySet().iterator();
-
         iterator.forEachRemaining(E -> taskList.add(E.toString()));
         return taskList;
     }
@@ -61,8 +62,9 @@ public class EpicTask extends Task {
     @Override
     public void setStatus(Statuses status) {
         try {
-            throw new Exception("Хорошая попытка, но статус эпиков не может быть установлен в ручную!");
-        } catch (Exception e) {
+            throw new IllegalStatusChangeException(
+                    "Хорошая попытка, но статус эпиков не может быть установлен в ручную!");
+        } catch (IllegalStatusChangeException e) {
             e.printStackTrace();
             setStatus();
         }

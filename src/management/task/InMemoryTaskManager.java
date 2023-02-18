@@ -8,16 +8,8 @@ import task.SubTask;
 import task.Task;
 
 import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 
-/*
-Созданный ранее класс менеджера нужно переименовать в InMemoryTaskManager.
-Внутри класса должна остаться реализация методов.
-При этом важно не забыть имплементировать TaskManager.
-*/
 public class InMemoryTaskManager implements TaskManager {
 
     private static HashMap<TaskFamily, HashMap<Integer, ? super Task>> tasks;
@@ -221,6 +213,9 @@ public class InMemoryTaskManager implements TaskManager {
         return task;
     }
 
+    //добавить метод void remove(int id) для удаления задачи из просмотра.
+    // И реализовать его в классе InMemoryHistoryManager.
+    // Добавьте его вызов при удалении задач, чтобы они также удалялись из истории просмотров.
     @Override
     public <T extends Task> void removeTask(int id) {
         try {
@@ -234,7 +229,6 @@ public class InMemoryTaskManager implements TaskManager {
                         SubTask subTask = (SubTask) task;
                         subTask.getMyEpic().getMySubTaskMap().remove(id);
                         subTask.getMyEpic().setStatus();
-                        tasks.get(TaskFamily.getEnumFromClass(task.getClass())).remove(id);
                         break;
                     case EPICTASK:
                         EpicTask epic = (EpicTask) task;
@@ -243,10 +237,10 @@ public class InMemoryTaskManager implements TaskManager {
                             tasks.get(TaskFamily.getEnumFromClass(mySub.getClass())).remove(mySub.getId());
                             epic.removeMySubTaskMap();// это тоже для GC
                         }
-                    case TASK:
-                        tasks.get(TaskFamily.getEnumFromClass(task.getClass())).remove(id);
                         break;
                 }
+                tasks.get(TaskFamily.getEnumFromClass(task.getClass())).remove(id);
+                histMan.remove(id);
             }
         } catch (NoMatchesFoundException e) {
             e.printStackTrace();
@@ -255,7 +249,7 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     @Override
-    public ArrayList<? super Task> getHistory() {
+    public List<? super Task> getHistory() {
         return histMan.getHistory();
     }
 }

@@ -1,11 +1,14 @@
 package management.history;
 
+import management.task.InMemoryTaskManager;
 import task.Task;
 import java.util.ArrayList;
+import java.util.List;
 
 public class InMemoryHistoryManager implements HistoryManager {
     //    Новый класс InMemoryHistoryManager должен реализовывать интерфейс HistoryManager.
-    private final static ArrayList<? super Task> HISTORY_LIST = new ArrayList<>(10);
+    private final static List<? super Task> HISTORY_LIST = new ArrayList<>(10);
+    private InMemoryTaskManager taskMan = new InMemoryTaskManager();
 
         @Override
     public <T extends Task> void add(T task) {
@@ -15,8 +18,15 @@ public class InMemoryHistoryManager implements HistoryManager {
         HISTORY_LIST.add(task);
     }
 
+    //...добавить метод void remove(int id) для удаления задачи из просмотра. И
+    // реализовать его в классе InMemoryHistoryManager.
     @Override
-    public ArrayList<? super Task> getHistory() {
+    public void remove(int id){
+            HISTORY_LIST.remove(taskMan.getTaskNH(id));
+    }
+
+    @Override
+    public List<? super Task> getHistory() {
         return HISTORY_LIST;
     }
 
@@ -28,4 +38,6 @@ public class InMemoryHistoryManager implements HistoryManager {
         }
         System.out.println("***");
     }
+
+
 }
