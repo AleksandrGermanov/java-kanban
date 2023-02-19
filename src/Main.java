@@ -5,6 +5,6 @@ import task.*;
 
 public class Main {
     public static void main(String[] args) {
-    // Я в отпуске, прошу не беспокоить :)
+    
     }
 }
