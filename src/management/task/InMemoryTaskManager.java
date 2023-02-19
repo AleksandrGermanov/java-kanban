@@ -213,7 +213,7 @@ public class InMemoryTaskManager implements TaskManager {
         return task;
     }
 
-    //добавить метод void remove(int id) для удаления задачи из просмотра.
+    //...добавить метод void remove(int id) для удаления задачи из просмотра.
     // И реализовать его в классе InMemoryHistoryManager.
     // Добавьте его вызов при удалении задач, чтобы они также удалялись из истории просмотров.
     @Override
@@ -233,14 +233,15 @@ public class InMemoryTaskManager implements TaskManager {
                     case EPICTASK:
                         EpicTask epic = (EpicTask) task;
                         for (SubTask mySub : epic.getMySubTaskMap().values()) {
-                            mySub.removeMyEpicLink();// это для GC
+                            histMan.remove(mySub.getId());
                             tasks.get(TaskFamily.getEnumFromClass(mySub.getClass())).remove(mySub.getId());
-                            epic.removeMySubTaskMap();// это тоже для GC
+                            mySub.removeMyEpicLink();// это для GC
                         }
+                        epic.removeMySubTaskMap();// это тоже для GC
                         break;
                 }
-                tasks.get(TaskFamily.getEnumFromClass(task.getClass())).remove(id);
                 histMan.remove(id);
+                tasks.get(TaskFamily.getEnumFromClass(task.getClass())).remove(id);
             }
         } catch (NoMatchesFoundException e) {
             e.printStackTrace();

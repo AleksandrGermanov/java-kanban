@@ -138,9 +138,7 @@ public class TestInMemoryTaskManager extends InMemoryTaskManager {
         ArrayList<Integer> list = new ArrayList<>();
 
         for (TaskFamily TF : TaskFamily.values()) {
-            for (int id : tasks.get(TF).keySet()) {
-                list.add(id);
-            }
+            list.addAll(tasks.get(TF).keySet());
         }
         return list;
     }

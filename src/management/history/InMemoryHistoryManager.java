@@ -2,16 +2,11 @@ package management.history;
 
 import task.Task;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 
 public class InMemoryHistoryManager implements HistoryManager {
     private static final CustomLinkedList<? super Task> taskLinkList = new CustomLinkedList<>();
-    private static List<? super Task> historyList = taskLinkList.getTasks();
-
 
     @Override
     public <T extends Task> void add(T task) {
@@ -27,10 +22,12 @@ public class InMemoryHistoryManager implements HistoryManager {
 
     @Override
     public List<? super Task> getHistory() {
-        return historyList;
+        return taskLinkList.getTasks();
     }
 
     public void printHistoryList() {
+        List<? super Task> historyList = getHistory();
+
         System.out.println("История обращений: ");
         System.out.println("***");
         if (historyList != null) {
@@ -38,7 +35,7 @@ public class InMemoryHistoryManager implements HistoryManager {
                 System.out.print(task.toString().replace("^\b", System.lineSeparator()));
             }
         }
-        System.out.println("***");
+        System.out.println("***\n");
     }
 
     //Сначала напишите свою реализацию двусвязного списка задач с методами linkLast и getTasks.
@@ -50,10 +47,6 @@ public class InMemoryHistoryManager implements HistoryManager {
         private Node<T> head;
         private Node<T> tail;
         private int size = 0;
-
-        int size() {
-            return size;
-        }
 
         void addNode(T task) {
             if (size == 0) {
@@ -68,6 +61,9 @@ public class InMemoryHistoryManager implements HistoryManager {
         }
 
         void linkLast(T task) {
+            if (nodeMap.containsKey(task.getId())){
+                removeNode(task.getId());
+            }
             Node<T> node = new Node<>(false, task);
             tail.isTail = false;
             tail.next = node;
@@ -75,16 +71,21 @@ public class InMemoryHistoryManager implements HistoryManager {
             tail = node;
             ++size;
             nodeMap.put(node.taskId, node);
+            if (nodeMap.size()>10){
+                removeNode(head);
+                size--;
+            }
         }
 
         ArrayList<? super Task> getTasks() {
             ArrayList<? super Task> list = new ArrayList<>();
             if(head != null){
                 Node<T> iterator = head;
-            do {
+                while (!iterator.isTail){
                 list.add(iterator.task);
                 iterator = iterator.next;
-            } while (!iterator.isTail);
+            }
+                list.add(iterator.task);
             return list;
             } else{
                 return null;
@@ -92,21 +93,42 @@ public class InMemoryHistoryManager implements HistoryManager {
         }
 
         void removeNode(int id) {
-            Node<T> task = nodeMap.get(id);
-            if (task.isHead && !task.isTail) {
-                task.next.prev = null;
-                task.next.isHead = true;
-                head = task.next;
-            } else if(task.isTail && !task.isHead){
-                task.prev.next = null;
-                task.prev.isTail = true;
-                tail = task.prev;
-            } else if(!task.isTail) {
-                task.prev.next = task.next;
-                task.next.prev = task.prev;
+            if (nodeMap.containsKey(id)){
+                Node<T> taskNode = nodeMap.get(id);
+                if (!taskNode.isTail && !taskNode.isHead) {
+                    taskNode.prev.next = taskNode.next;
+                    taskNode.next.prev = taskNode.prev;
+                } else if (taskNode.isHead && !taskNode.isTail) {
+                    taskNode.next.prev = null;
+                    taskNode.next.isHead = true;
+                    head = taskNode.next;
+                } else if (!taskNode.isHead) {
+                    taskNode.prev.next = null;
+                    taskNode.prev.isTail = true;
+                    tail = taskNode.prev;
+                }
+                nodeMap.remove(id);
+                size--;
             }
-            nodeMap.remove(id);
-            size--;
+        }
+
+        void removeNode(Node<T> taskNode) { // по ТЗ removeNode должен принимать Node
+            if (nodeMap.containsValue(taskNode)){
+                if (!taskNode.isTail && !taskNode.isHead) {
+                    taskNode.prev.next = taskNode.next;
+                    taskNode.next.prev = taskNode.prev;
+                } else if (taskNode.isHead && !taskNode.isTail) {
+                    taskNode.next.prev = null;
+                    taskNode.next.isHead = true;
+                    head = taskNode.next;
+                } else if (!taskNode.isHead) {
+                    taskNode.prev.next = null;
+                    taskNode.prev.isTail = true;
+                    tail = taskNode.prev;
+                }
+                nodeMap.remove(taskNode.taskId);
+                size--;
+            }
         }
     }
 }
@@ -124,5 +146,20 @@ class Node<T extends Task> {
         this.isHead = isHead;
         this.task = task;
         this.taskId = task.getId();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Node<?> node = (Node<?>) o;
+        return isHead == node.isHead && isTail == node.isTail && taskId == node.taskId
+                && Objects.equals(prev, node.prev) && Objects.equals(next, node.next)
+                && Objects.equals(task, node.task);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(isHead, isTail, prev, next, taskId, task);
     }
 }
