@@ -43,17 +43,15 @@ public class InMemoryHistoryManager implements HistoryManager {
 // него в обычный ArrayList. Убедитесь, что решение работает. Отдельный класс для списка создавать
 // не нужно — реализуйте его прямо в классе InMemoryHistoryManager.
     private static class CustomLinkedList<T extends Task> { //Этот класс не отдельный
-        private final Map<Integer, Node<T>> nodeMap = new HashMap<>();
-        private Node<T> head;
-        private Node<T> tail;
-        private int size = 0;
+        private final Map<Integer, Node<Task>> nodeMap = new HashMap<>();
+        private Node<Task> head;
+        private Node<Task> tail;
 
         void addNode(T task) {
-            if (size == 0) {
-                Node<T> node = new Node<>(true, task);
+            if (nodeMap.size() == 0) {
+                Node<Task> node = new Node<>(true, task);
                 head = node;
                 tail = node;
-                ++size;
                 nodeMap.put(node.taskId, node);
             } else {
                 linkLast(task);
@@ -61,40 +59,31 @@ public class InMemoryHistoryManager implements HistoryManager {
         }
 
         void linkLast(T task) {
-            if (nodeMap.containsKey(task.getId())){
+            if (nodeMap.containsKey(task.getId())) {
                 removeNode(task.getId());
             }
-            Node<T> node = new Node<>(false, task);
+            Node<Task> node = new Node<>(false, task);
             tail.isTail = false;
             tail.next = node;
             node.prev = tail;
             tail = node;
-            ++size;
             nodeMap.put(node.taskId, node);
-            if (nodeMap.size()>10){
-                removeNode(head);
-                size--;
-            }
         }
 
         ArrayList<? super Task> getTasks() {
             ArrayList<? super Task> list = new ArrayList<>();
-            if(head != null){
-                Node<T> iterator = head;
-                while (!iterator.isTail){
-                list.add(iterator.task);
-                iterator = iterator.next;
+            Node<Task> node = head;
+            while (!node.isTail) {
+                list.add(node.task);
+                node = node.next;
             }
-                list.add(iterator.task);
+            list.add(node.task);
             return list;
-            } else{
-                return null;
-            }
         }
 
         void removeNode(int id) {
-            if (nodeMap.containsKey(id)){
-                Node<T> taskNode = nodeMap.get(id);
+            if (nodeMap.containsKey(id)) {
+                Node<Task> taskNode = nodeMap.get(id);
                 if (!taskNode.isTail && !taskNode.isHead) {
                     taskNode.prev.next = taskNode.next;
                     taskNode.next.prev = taskNode.prev;
@@ -108,44 +97,37 @@ public class InMemoryHistoryManager implements HistoryManager {
                     tail = taskNode.prev;
                 }
                 nodeMap.remove(id);
-                size--;
             }
         }
 
-        void removeNode(Node<T> taskNode) { // по ТЗ removeNode должен принимать Node
-            if (nodeMap.containsValue(taskNode)){
-                if (!taskNode.isTail && !taskNode.isHead) {
-                    taskNode.prev.next = taskNode.next;
-                    taskNode.next.prev = taskNode.prev;
-                } else if (taskNode.isHead && !taskNode.isTail) {
-                    taskNode.next.prev = null;
-                    taskNode.next.isHead = true;
-                    head = taskNode.next;
-                } else if (!taskNode.isHead) {
-                    taskNode.prev.next = null;
-                    taskNode.prev.isTail = true;
-                    tail = taskNode.prev;
-                }
-                nodeMap.remove(taskNode.taskId);
-                size--;
-            }
+        void removeNode(Node<Task> taskNode) { // по ТЗ removeNode должен принимать Node
+            removeNode(taskNode.taskId);
         }
     }
 }
 
 //А вот отдельный класс Node для узла списка необходимо добавить.
 class Node<T extends Task> {
+    /*
+    C:\Users\Mailm\dev\java-kanban\src\management\history\InMemoryHistoryManager.java:110:8
+    java: modifier static not allowed here
+    */
     boolean isHead;
     boolean isTail = true; //новый узел всегда добавляется в конец
-    Node<T> prev;
-    Node<T> next;
+    Node<Task> prev;
+    Node<Task> next;
     final int taskId;
-    final T task;
+    final Task task;
 
-    public Node(boolean isHead, T task) {
+    public Node(boolean isHead, Task task) {
         this.isHead = isHead;
         this.task = task;
         this.taskId = task.getId();
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(isHead, isTail, prev, next, taskId, task);
     }
 
     @Override
@@ -155,11 +137,6 @@ class Node<T extends Task> {
         Node<?> node = (Node<?>) o;
         return isHead == node.isHead && isTail == node.isTail && taskId == node.taskId
                 && Objects.equals(prev, node.prev) && Objects.equals(next, node.next)
-                && Objects.equals(task, node.task);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(isHead, isTail, prev, next, taskId, task);
+                && task.equals(node.task);
     }
 }
