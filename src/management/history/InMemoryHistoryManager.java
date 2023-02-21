@@ -49,7 +49,7 @@ public class InMemoryHistoryManager implements HistoryManager {
 
         void addNode(T task) {
             if (nodeMap.size() == 0) {
-                Node<Task> node = new Node<>(true, task);
+                Node<Task> node = new Node<>(true, task, task.getId());
                 head = node;
                 tail = node;
                 nodeMap.put(node.taskId, node);
@@ -62,7 +62,7 @@ public class InMemoryHistoryManager implements HistoryManager {
             if (nodeMap.containsKey(task.getId())) {
                 removeNode(task.getId());
             }
-            Node<Task> node = new Node<>(false, task);
+            Node<Task> node = new Node<>(false, task, task.getId());
             tail.isTail = false;
             tail.next = node;
             node.prev = tail;
@@ -104,39 +104,35 @@ public class InMemoryHistoryManager implements HistoryManager {
             removeNode(taskNode.taskId);
         }
     }
-}
 
-//А вот отдельный класс Node для узла списка необходимо добавить.
-class Node<T extends Task> {
-    /*
-    C:\Users\Mailm\dev\java-kanban\src\management\history\InMemoryHistoryManager.java:110:8
-    java: modifier static not allowed here
-    */
-    boolean isHead;
-    boolean isTail = true; //новый узел всегда добавляется в конец
-    Node<Task> prev;
-    Node<Task> next;
-    final int taskId;
-    final Task task;
+    private static class Node<Task> {
+        boolean isHead;
+        boolean isTail = true; //новый узел всегда добавляется в конец
+        Node<Task> prev;
+        Node<Task> next;
+        final int taskId;
+        final Task task;
 
-    public Node(boolean isHead, Task task) {
-        this.isHead = isHead;
-        this.task = task;
-        this.taskId = task.getId();
-    }
+        public Node(boolean isHead, Task task, int taskId) {
+            this.isHead = isHead;
+            this.task = task;
+            this.taskId = taskId;
+        }
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(isHead, isTail, prev, next, taskId, task);
-    }
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            Node<?> node = (Node<?>) o;
+            return isHead == node.isHead && isTail == node.isTail && taskId == node.taskId
+                    && Objects.equals(prev, node.prev) && Objects.equals(next, node.next)
+                    && task.equals(node.task);
+        }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Node<?> node = (Node<?>) o;
-        return isHead == node.isHead && isTail == node.isTail && taskId == node.taskId
-                && Objects.equals(prev, node.prev) && Objects.equals(next, node.next)
-                && task.equals(node.task);
+        @Override
+        public int hashCode() {
+            return Objects.hash(isHead, isTail, prev, next, taskId, task);
+        }
     }
 }
+

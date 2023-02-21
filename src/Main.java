@@ -3,7 +3,7 @@ import management.history.*;
 import management.task.*;
 import task.*;
 
-// Исправления подъехали...
+// Еще исправления.
 public class Main {
     public static void main(String[] args) {
     TaskManager taskMan = Managers.getDefault();
