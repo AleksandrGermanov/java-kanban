@@ -23,6 +23,6 @@ public interface TaskManager {
 
     <T extends Task> void removeTask(int id);
 
-    List<? super Task> getHistory();
+    List<Task> getHistory();
 }
 

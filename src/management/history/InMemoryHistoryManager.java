@@ -13,42 +13,41 @@ public class InMemoryHistoryManager implements HistoryManager {
         taskLinkList.addNode(task);
     }
 
-    //...добавить метод void remove(int id) для удаления задачи из просмотра. И
-    // реализовать его в классе InMemoryHistoryManager.
     @Override
     public void remove(int id) {
         taskLinkList.removeNode(id);
     }
 
     @Override
-    public List<? super Task> getHistory() {
+    public List<Task> getHistory() {
         return taskLinkList.getTasks();
     }
 
+    @Override
+    public void clearHistory() {
+        taskLinkList.clearHistory();
+    }
+
     public void printHistoryList() {
-        List<? super Task> historyList = getHistory();
+        List<Task> historyList = getHistory();
 
         System.out.println("История обращений: ");
         System.out.println("***");
         if (historyList != null) {
-            for (Object task : historyList) {
+            for (Task task : historyList) {
                 System.out.print(task.toString().replace("^\b", System.lineSeparator()));
             }
         }
         System.out.println("***\n");
     }
 
-    //Сначала напишите свою реализацию двусвязного списка задач с методами linkLast и getTasks.
-// linkLast будет добавлять задачу в конец этого списка, а getTasks собирать все задачи из
-// него в обычный ArrayList. Убедитесь, что решение работает. Отдельный класс для списка создавать
-// не нужно — реализуйте его прямо в классе InMemoryHistoryManager.
     private static class CustomLinkedList<T extends Task> { //Этот класс не отдельный
         private final Map<Integer, Node<Task>> nodeMap = new HashMap<>();
-        private Node<Task> head;
-        private Node<Task> tail;
+        private static Node<Task> head;
+        private static Node<Task> tail;
 
         void addNode(T task) {
-            if (nodeMap.size() == 0) {
+            if (nodeMap.isEmpty()) {
                 Node<Task> node = new Node<>(true, task, task.getId());
                 head = node;
                 tail = node;
@@ -62,22 +61,28 @@ public class InMemoryHistoryManager implements HistoryManager {
             if (nodeMap.containsKey(task.getId())) {
                 removeNode(task.getId());
             }
-            Node<Task> node = new Node<>(false, task, task.getId());
-            tail.isTail = false;
-            tail.next = node;
-            node.prev = tail;
-            tail = node;
-            nodeMap.put(node.taskId, node);
+            if(!nodeMap.isEmpty()) {
+                Node<Task> node = new Node<>(false, task, task.getId());
+                tail.isTail = false;
+                tail.next = node;
+                node.prev = tail;
+                tail = node;
+                nodeMap.put(node.taskId, node);
+            } else{
+                addNode(task);
+            }
         }
 
-        ArrayList<? super Task> getTasks() {
-            ArrayList<? super Task> list = new ArrayList<>();
+        ArrayList<Task> getTasks() {
+            ArrayList<Task> list = new ArrayList<>();
             Node<Task> node = head;
-            while (!node.isTail) {
+            if (node != null) {
+                while (!node.isTail) {
+                    list.add(node.task);
+                    node = node.next;
+                }
                 list.add(node.task);
-                node = node.next;
             }
-            list.add(node.task);
             return list;
         }
 
@@ -95,6 +100,9 @@ public class InMemoryHistoryManager implements HistoryManager {
                     taskNode.prev.next = null;
                     taskNode.prev.isTail = true;
                     tail = taskNode.prev;
+                } else {
+                    head = null;
+                    tail = null;
                 }
                 nodeMap.remove(id);
             }
@@ -102,6 +110,12 @@ public class InMemoryHistoryManager implements HistoryManager {
 
         void removeNode(Node<Task> taskNode) { // по ТЗ removeNode должен принимать Node
             removeNode(taskNode.taskId);
+        }
+
+        void clearHistory() {
+            while (!nodeMap.isEmpty()) {
+                removeNode(tail);
+            }
         }
     }
 

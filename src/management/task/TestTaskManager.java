@@ -1,55 +1,20 @@
 package management.task;
 
+import management.history.InMemoryHistoryManager;
+import task.EpicTask;
+import task.Statuses;
+import task.SubTask;
+import task.Task;
+
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Random;
-import task.*;
 
-public class TestInMemoryTaskManager extends InMemoryTaskManager {
-    private static HashMap<TaskFamily, HashMap<Integer, ? super Task>> tasks = getTasks();
-    private static Random random = new Random();
-
-    public void test0() {
-        createRandomTask(new Task());
-        createRandomTask(new Task());
-        createRandomTask(new EpicTask());
-        createRandomTask(new SubTask(getTaskNH(200002)));
-        createRandomTask(new SubTask(getTaskNH(200002)));
-        createRandomTask(new EpicTask());
-        createRandomTask(new SubTask(getTaskNH(200005)));
-        System.out.println(getTaskList());
-        changeTask(100000);
-        changeTask(300006);
-        changeTask(300004);
-        removeTask(100001);
-        System.out.println(getTaskList());
-        removeTask(200005);
-        removeTask(300003);
-        System.out.println(getTaskList());
-    }
-
-    public void test1(int quantity) {
-        createRandomTasks(quantity);
-        System.out.println(getTaskList());
-        changeRandomTasks(50);
-        System.out.println(getTaskList());
-        removeRandomTasks(50);
-        System.out.println(getTaskList());
-        removeRandomTasks(100);
-        System.out.println(getTaskList());
-    }
-
-    public void test2(int quantity, int percentOfChanges, int percentOfRemoves) {
-        createRandomTasks(quantity);
-        System.out.println(getTaskList());
-        changeRandomTasks(percentOfChanges);
-        System.out.println(getTaskList());
-        removeRandomTasks(percentOfRemoves);
-        System.out.println(getTaskList());
-    }
+public class TestTaskManager extends FileBackedTaskManager {
+    private static final Random random = new Random();
+    public InMemoryHistoryManager hm = new InMemoryHistoryManager();
 
     public <T extends Task> void createRandomTask(T task) {
-        task.setName(TestInMemoryTaskManager.randomTaskNameCreator());
+        task.setName(TestTaskManager.randomTaskNameCreator());
         task.setDescription("Нужно просто пойти и " + task.getName());
         createTask(task);
     }
@@ -64,24 +29,15 @@ public class TestInMemoryTaskManager extends InMemoryTaskManager {
                 + ' ' + word3[random.nextInt(word3.length)]);
     }
 
-    public <T extends Task> void changeTask(int id) {
+    public <T extends Task> T changeTask(int id) {
         T task = getTaskNH(id);
 
         task.setName("New name:" + randomTaskNameCreator());
         task.setDescription("А у тебя точно получится?");
-        switch (task.getClass().getName().split("\\.")[
-                task.getClass().getName().split("\\.").length - 1]) {
-            case "Task":
-                task.setStatus(randomStatus());
-                break;
-            case "SubTask":
-                task.setStatus(randomStatus());
-                SubTask sub = (SubTask) task;
-                sub.getMyEpic().setStatus();/*Менеджер сам не выбирает статус для задачи.
-                Информация о нём приходит менеджеру вместе с информацией о самой задаче.
-                По этим данным в одних случаях он будет сохранять статус, в других будет рассчитывать.*/
-                break;
+        if (!defineTypeById(task.getId()).equals(TaskFamily.EPICTASK)) {
+            task.setStatus(randomStatus());
         }
+        return task;
     }
 
     static Statuses randomStatus() {
@@ -143,7 +99,7 @@ public class TestInMemoryTaskManager extends InMemoryTaskManager {
         return list;
     }
 
-    public void changeRandomTasks(int percentage) {
+    public void renewRandomTasks(int percentage) {
         ArrayList<Integer> allKeys = getAllKeysList();
         Integer id;
         int count = 0;
@@ -153,7 +109,7 @@ public class TestInMemoryTaskManager extends InMemoryTaskManager {
         }
         for (int i = 0; i < (countAllTasks() * percentage / 100); i++) {
             id = allKeys.get(random.nextInt(allKeys.size()));
-            changeTask(id);
+            renewTask(changeTask(id));
             allKeys.remove(id);
             ++count;
             if (allKeys.isEmpty()) {
@@ -190,6 +146,18 @@ public class TestInMemoryTaskManager extends InMemoryTaskManager {
         }
         System.out.println("Удалено " + count + " объектов.");
         System.out.println("Осталось " + remaining + " объектов.");
+    }
+
+    public void randomTaskGetter(int quantity) {
+        StringBuilder idsString = new StringBuilder();
+        for (int i = 0; i < quantity; i++) {
+            ArrayList<Integer> allKeys = getAllKeysList();
+            int id = allKeys.get(random.nextInt(allKeys.size()));
+            getTask(id);
+            idsString.append(id).append(", ");
+        }
+        System.out.println("Были вызваны следующие задачи для формирования истории:");
+        System.out.println(idsString+"\b\b");
     }
 }
 

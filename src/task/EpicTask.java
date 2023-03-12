@@ -90,7 +90,7 @@ public class EpicTask extends Task {
                 + ", mySubTaskMap.keySet=" + mySubTaskMap.keySet()
                 + ", name='" + name + '\''
                 + "^\b, description='" + description + '\''
-                + ", Id=" + Id +
+                + ", Id=" + id +
                 ", status='" + status + '\'' + "}^\b";
     }
 

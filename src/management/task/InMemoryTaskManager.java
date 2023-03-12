@@ -12,10 +12,9 @@ import java.util.*;
 
 public class InMemoryTaskManager implements TaskManager {
 
-    private static HashMap<TaskFamily, HashMap<Integer, ? super Task>> tasks;
-
-    private HistoryManager histMan;
-    private static int idCounter = 0;
+    protected static HashMap<TaskFamily, HashMap<Integer, ? super Task>> tasks;
+    protected static HistoryManager histMan;
+    protected static int idCounter = 0;
 
     public InMemoryTaskManager() {
         initializeTasksMap();
@@ -31,10 +30,6 @@ public class InMemoryTaskManager implements TaskManager {
         }
     }
 
-    protected static HashMap<TaskFamily, HashMap<Integer, ? super Task>> getTasks() {
-        return tasks;
-    }
-
     public int generateId(Task task) {
         DecimalFormat df = new DecimalFormat("00000");
         int id = 0;
@@ -48,7 +43,7 @@ public class InMemoryTaskManager implements TaskManager {
         return id;
     }
 
-    public TaskFamily defineTypeById(int id) {
+    public static TaskFamily defineTypeById(int id) {
         TaskFamily type = null;
         int idToOrdinal = Integer.parseInt(String.valueOf(Integer.toString(id).charAt(0))) - 1;
 
@@ -81,12 +76,13 @@ public class InMemoryTaskManager implements TaskManager {
         putTaskToMap(task);
     }
 
-    public <T extends Task> void putTaskToMap(T task) {
+    public static <T extends Task> void putTaskToMap(T task) {
         try {
             switch (TaskFamily.getEnumFromClass(task.getClass())) {
                 case SUBTASK:
                     SubTask subTask = (SubTask) task;
                     subTask.getMyEpic().getMySubTaskMap().put(subTask.getId(), subTask);
+                    subTask.getMyEpic().setStatus();
                 case EPICTASK:
                 case TASK:
                     tasks.get(TaskFamily.getEnumFromClass(task.getClass())).put(task.getId(), task);
@@ -153,6 +149,9 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public void removeAllTasks(TaskFamily type) {//Удаление всех задач.
         if (isFoundType(type)) {
+            for(Integer id : tasks.get(type).keySet()){
+                histMan.remove(id);
+            }
             tasks.get(type).clear();
         }
     }
@@ -160,6 +159,7 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public void removeAllTasks() {
         tasks.clear();
+        histMan.clearHistory();
         initializeTasksMap();
     }
 
@@ -168,7 +168,7 @@ public class InMemoryTaskManager implements TaskManager {
         return epic.getMySubTaskList();
     }
 
-    public boolean isFoundById(int id) {
+    public static boolean isFoundById(int id) {
         Object task = null;
         boolean found = false;
 
@@ -201,7 +201,7 @@ public class InMemoryTaskManager implements TaskManager {
         return task;
     }
 
-    public <T extends Task> T getTaskNH(int id) {//NH - no History
+    public static <T extends Task> T getTaskNH(int id) {//NH - no History
         T task = null;
         if (isFoundById(id))
             for (int index : tasks.get(defineTypeById(id)).keySet()) {
@@ -250,7 +250,7 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     @Override
-    public List<? super Task> getHistory() {
+    public List<Task> getHistory() {
         return histMan.getHistory();
     }
 }

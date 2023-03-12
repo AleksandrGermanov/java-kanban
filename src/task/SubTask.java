@@ -34,7 +34,7 @@ public class SubTask extends Task {
         if (o == null || getClass() != o.getClass()) return false;
         if (!super.equals(o)) return false;
         SubTask subTask = (SubTask) o;
-        return myEpic == subTask.myEpic;
+        return myEpic.id == subTask.myEpic.id;
     }
 
     @Override
@@ -47,7 +47,7 @@ public class SubTask extends Task {
         return "SubTask{myEpicId=" + getMyEpicId()
                 + ", name='" + name + '\''
                 + ", description='" + description + '\''
-                + ", Id=" + Id
+                + ", Id=" + id
                 + ", status='" + status + '\'' + "}^\b";
     }
 }
