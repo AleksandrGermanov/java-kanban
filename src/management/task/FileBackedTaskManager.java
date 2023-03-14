@@ -30,9 +30,16 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
     }
 
     /***
-     * Здавствуй(те), Вячеслав!
      *Спасибо за комментарии!
-     * Постарался все поправить)
+     *
+     * "Лишнюю" инициализацию удалил.
+     * Она использовалась для тестирования сценария,
+     * при котором мы имеем пустой файл data.csv
+     * (первая инициализация создавала этот файл).
+     *
+     * По поводу switch - у меня сейчас Amazon Corretto 11,
+     * согласно требованиям курса.
+     * (Спринт 1/10: 1 → Тема 6/7: JDK и среда разработки → Урок 2/6)
      */
     public static void main(String[] args) {
         try {
@@ -42,7 +49,6 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         }
         System.out.println("проверяем работу с пустыми данными");
         TestTaskManager ttm = new TestTaskManager(csvPath);
-        ttm = new TestTaskManager(csvPath);
         System.out.println(ttm.getTaskList());
         System.out.println(ttm.getHistory());
 
@@ -241,7 +247,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
     }
 
     private static List<Integer> historyFromString(String data) {
-        List<Integer> idList = Collections.EMPTY_LIST;
+        List<Integer> idList = Collections.emptyList();
 
         if (!data.equals("No history")) {
             String[] ids = data.split(",");
