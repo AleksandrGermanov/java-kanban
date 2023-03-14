@@ -119,15 +119,15 @@ public class InMemoryHistoryManager implements HistoryManager {
         }
     }
 
-    private static class Node<Task> {
+    private static class Node<T extends Task> {
         boolean isHead;
         boolean isTail = true; //новый узел всегда добавляется в конец
-        Node<Task> prev;
-        Node<Task> next;
+        Node<T> prev;
+        Node<T> next;
         final int taskId;
-        final Task task;
+        final T task;
 
-        public Node(boolean isHead, Task task, int taskId) {
+        public Node(boolean isHead, T task, int taskId) {
             this.isHead = isHead;
             this.task = task;
             this.taskId = taskId;

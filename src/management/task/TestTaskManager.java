@@ -6,12 +6,19 @@ import task.Statuses;
 import task.SubTask;
 import task.Task;
 
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Random;
 
 public class TestTaskManager extends FileBackedTaskManager {
     private static final Random random = new Random();
     public InMemoryHistoryManager hm = new InMemoryHistoryManager();
+
+    public TestTaskManager(){
+    }
+    public TestTaskManager(Path path){
+        super(path);
+    }
 
     public <T extends Task> void createRandomTask(T task) {
         task.setName(TestTaskManager.randomTaskNameCreator());

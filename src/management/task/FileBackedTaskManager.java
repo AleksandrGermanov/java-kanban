@@ -21,47 +21,18 @@ import java.util.List;
 
 public class FileBackedTaskManager extends InMemoryTaskManager {
 
-    private static final Path csvPath = Paths.get(System.getProperty("user.dir"), "All_eggs_in_one_basket.csv");
+    private static final Path csvPath = Paths.get(System.getProperty("user.dir"), "data.csv");
 
     public FileBackedTaskManager() {
-        try {
-            if (!Files.exists(csvPath)) {
-                Files.createFile(csvPath);
-            }
-        } catch (IOException e) {
-            throw new ManagerSaveException();
-        }
+    }
+    public FileBackedTaskManager(Path csvPath) {
         loadFromFile(csvPath);
     }
 
     /***
      * Здавствуй(те), Вячеслав!
-     *
-     * Немного задержался с этим ТЗ, в основном в связи с нехваткой времени.
-     * В классе Node<Task> литерал Task является не названием класса, а именем переменной,
-     * на подобии <T> или <E>, поэтому внутри этого класса получить доступ к методам класса Task
-     * стандартными средствами нельзя. Надо либо отказываться от параметризации, либо использовать
-     * для указания типа <T extends Task> или < ? >.
-     * Ниже для удобства текст коммита.
-     *
-     * feat: Добавить возможность сохранения состояния менеджера задач
-     *
-     * feat: создать класс FileBackedTaskManager;
-     * style: в классе Task заменить имя переменной Id на id;
-     * refactor: в интерфейсах TaskManager, HistoryManager изменить параметризацию листа getHistory для
-     * упрощения работы с ним, добавить метод clearHisory() в HistoryManager для облегчения удаления истории;
-     * bugfix: в классе InMemoryHistoryManager настроить правильное удаление элемента CustomLinkedList,
-     * когда он является единственным;
-     * refactor: в классе InMemoryTaskManager изменить модификаторы переменных класса, методов для работы
-     * в классах-потомках; добавить изменение истории при вызове методов, удаляющих сразу несколько задач;
-     * delete: класс Main, в связи с переносом метода psvm в другой класс в соответствии с ТЗ;
-     * feat: создать класс ManagerSaveException;
-     * refactor: в классе SubTask изменить метод equals() - раньше сравнивал ссылки на эпик, теперь
-     * сравнивает их id;
-     * refactor: переименовать TestInMemoryTaskManager в TestTaskManager, будет унаследован от
-     * FileBackedTaskManager, добавить метод randomTaskGetter(), заменить метод createRandomTasks на
-     * renewRandomTasks();
-     * refactor: добавить в gitignore csv файлы.
+     *Спасибо за комментарии!
+     * Постарался все поправить)
      */
     public static void main(String[] args) {
         try {
@@ -70,8 +41,8 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
             e.printStackTrace();
         }
         System.out.println("проверяем работу с пустыми данными");
-        TestTaskManager ttm = new TestTaskManager();
-        ttm = new TestTaskManager();
+        TestTaskManager ttm = new TestTaskManager(csvPath);
+        ttm = new TestTaskManager(csvPath);
         System.out.println(ttm.getTaskList());
         System.out.println(ttm.getHistory());
 
@@ -82,7 +53,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         System.out.println(ttm.getHistory());
 
         System.out.println("\n\n\nпроверяем формирование истории");
-        ttm = new TestTaskManager();
+        ttm = new TestTaskManager(csvPath);
         System.out.println(ttm.getTaskList());
         ttm.randomTaskGetter(10);
         ttm.hm.printHistoryList();
@@ -90,12 +61,12 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         System.out.println("\n\n\nпроверяем восстановление данных");
         ArrayList<String> oldTaskList = ttm.getTaskList();
         List<Task> oldHistory = ttm.getHistory();
-        ttm = new TestTaskManager();
+        ttm = new TestTaskManager(csvPath);
         System.out.println("сравниваем листы задач: " + oldTaskList.equals(ttm.getTaskList()));
         System.out.println("сравниваем листы истории: " + ttm.getHistory().equals(oldHistory));
 
         System.out.println("\n\n\nпроверяем обновление задач");
-        ttm = new TestTaskManager();
+        ttm = new TestTaskManager(csvPath);
         System.out.println(ttm.getTaskList());
         ttm.renewRandomTasks(60);
         System.out.println(ttm.getTaskList());
@@ -104,42 +75,79 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         System.out.println("\n\nпроверяем восстановление данных");
         ArrayList<String> oldTaskList2 = ttm.getTaskList();
         List<Task> oldHistory2 = ttm.getHistory();
-        ttm = new TestTaskManager();
+        ttm = new TestTaskManager(csvPath);
         System.out.println("сравниваем листы задач: " + oldTaskList2.equals(ttm.getTaskList()));
         System.out.println("сравниваем листы истории: " + ttm.getHistory().equals(oldHistory2));
 
         System.out.println("\n\n\nпроверяем удаление задач");
-        ttm = new TestTaskManager();
+        ttm = new TestTaskManager(csvPath);
         System.out.println(ttm.getTaskList());
-        ttm.removeRandomTasks(50);
+        ttm.removeRandomTasks(30);
         System.out.println(ttm.getTaskList());
         ttm.hm.printHistoryList();
 
         System.out.println("\n\nпроверяем восстановление данных");
         ArrayList<String> oldTaskList3 = ttm.getTaskList();
         List<Task> oldHistory3 = ttm.getHistory();
-        ttm = new TestTaskManager();
+        ttm = new TestTaskManager(csvPath);
         System.out.println("сравниваем листы задач: " + oldTaskList3.equals(ttm.getTaskList()));
         System.out.println("сравниваем листы истории: " + ttm.getHistory().equals(oldHistory3));
+    }
+
+    @Override
+    public <T extends Task> void createTask(T task) {
+        super.createTask(task);
+        save();
+    }
+
+    @Override
+    public <T extends Task> void renewTask(T task) {
+        super.renewTask(task);
+        save();
+    }
+
+    @Override
+    public <T extends Task> T getTask(int id) {
+        T task = super.getTask(id);
+        save();
+        return task;
+    }
+
+    @Override
+    public void removeTask(int id) {
+        super.removeTask(id);
+        save();
+    }
+
+    @Override
+    public void removeAllTasks(TaskFamily type) {//Удаление всех задач.
+        super.removeAllTasks(type);
+        save();
+    }
+
+    @Override
+    public void removeAllTasks() {
+        super.removeAllTasks();
+        save();
     }
 
     private static <T extends Task> String taskToString(T task) { //в тз String toString(Task task)
         String data = null;
 
         try {
-            data = task.getId() + "<<coma>>" + defineTypeById(task.getId())
-                    + "<<coma>>" + task.getName() + "<<coma>>" + task.getStatus()
-                    + "<<coma>>" + task.getDescription();
+            data = task.getId() + "," + defineTypeById(task.getId())
+                    + "," + task.getName().replace(',', '¶')//Если пользователь ввел в имени
+                    //или описании задачи запятую, без замены символа обратная сборка поломается,
+                    //т.к. сплит неправильно поделит поля.
+                    + "," + task.getStatus()
+                    + "," + task.getDescription().replace(',', '¶');
             if (TaskFamily.getEnumFromClass(task.getClass()).equals(TaskFamily.SUBTASK)) {
                 SubTask sub = (SubTask) task;
-                data += "<<coma>>" + sub.getMyEpicId();
+                data += "," + sub.getMyEpicId();
             }
         } catch (NoMatchesFoundException e) {
             e.printStackTrace();
         }
-
-        data = data.replace(',', '¶');
-        data = data.replace("<<coma>>", ",");
 
         return data;
     }
@@ -183,12 +191,12 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
                 StandardCharsets.UTF_8, StandardOpenOption.APPEND);
     }
 
-    public void save() {
+    private void save() {
         try {
             writeCSVMapToFile();
             writeHistoryToFile(historyToString(histMan));
         } catch (IOException e) {
-            throw new ManagerSaveException();
+            throw new ManagerSaveException(e);
         }
     }
 
@@ -232,7 +240,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         idCounter++;
     }
 
-    static List<Integer> historyFromString(String data) {
+    private static List<Integer> historyFromString(String data) {
         List<Integer> idList = Collections.EMPTY_LIST;
 
         if (!data.equals("No history")) {
@@ -255,6 +263,10 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
 
     private static void loadFromFile(Path csvPath) { //в тз в качестве аргумента File file
         try {
+            if (!Files.exists(csvPath)) {
+                Files.createFile(csvPath);
+            }
+
             List<String> file = Files.readAllLines(csvPath);
 
             if (!file.isEmpty()) {
@@ -276,44 +288,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
                 idListToHistory(historyFromString(file.get(file.size() - 1)));
             }
         } catch (IOException e) {
-            throw new ManagerSaveException();
+            throw new ManagerSaveException(e);
         }
-    }
-
-    @Override
-    public <T extends Task> void createTask(T task) {
-        super.createTask(task);
-        save();
-    }
-
-    @Override
-    public <T extends Task> void renewTask(T task) {
-        super.renewTask(task);
-        save();
-    }
-
-    @Override
-    public <T extends Task> T getTask(int id) {
-        T task = super.getTask(id);
-        save();
-        return task;
-    }
-
-    @Override
-    public void removeTask(int id) {
-        super.removeTask(id);
-        save();
-    }
-
-    @Override
-    public void removeAllTasks(TaskFamily type) {//Удаление всех задач.
-        super.removeAllTasks(type);
-        save();
-    }
-
-    @Override
-    public void removeAllTasks() {
-        super.removeAllTasks();
-        save();
     }
 }
