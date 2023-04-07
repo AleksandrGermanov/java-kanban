@@ -2,6 +2,7 @@ package management.task;
 
 import management.Managers;
 import management.history.HistoryManager;
+import management.time.TimeManager;
 import myExceptions.NoMatchesFoundException;
 import task.EpicTask;
 import task.SubTask;
@@ -14,54 +15,13 @@ public class InMemoryTaskManager implements TaskManager {
 
     protected static HashMap<TaskFamily, HashMap<Integer, ? super Task>> tasks;
     protected static HistoryManager histMan;
+    protected static TimeManager timeMan;
     protected static int idCounter = 0;
 
     public InMemoryTaskManager() {
         initializeTasksMap();
         histMan = Managers.getDefaultHistory();
-    }
-
-    public void initializeTasksMap() {
-        if (tasks == null || tasks.isEmpty()) {
-            tasks = new HashMap<>();
-            tasks.put(TaskFamily.TASK, new HashMap<>());
-            tasks.put(TaskFamily.EPICTASK, new HashMap<>());
-            tasks.put(TaskFamily.SUBTASK, new HashMap<>());
-        }
-    }
-
-    public int generateId(Task task) {
-        DecimalFormat df = new DecimalFormat("00000");
-        int id = 0;
-        try {
-            TaskFamily TF = TaskFamily.getEnumFromClass(task.getClass());
-            id = Integer.parseInt((TF.ordinal() + 1) + df.format(idCounter++));
-        } catch (NoMatchesFoundException e) {
-            e.printStackTrace();
-            System.out.println("В этом методе 1 ссылка на метод, который кидает исключение.");
-        }
-        return id;
-    }
-
-    public static TaskFamily defineTypeById(int id) {
-        TaskFamily type = null;
-        int idToOrdinal = Integer.parseInt(String.valueOf(Integer.toString(id).charAt(0))) - 1;
-
-        try {
-            for (TaskFamily TF : TaskFamily.values()) {
-                if (idToOrdinal == TF.ordinal()) {
-                    type = TF;
-                    break;
-                }
-            }
-            if (type == null) {
-                throw new NoMatchesFoundException("Сектор \"банкрот\" на барабане!");
-            }
-        } catch (NoMatchesFoundException e) {
-            System.out.println("type=null, defineTypeById=null");
-            e.printStackTrace();
-        }
-        return type;
+        timeMan = Managers.getDefaultTime();
     }
 
     @Override
@@ -74,24 +34,12 @@ public class InMemoryTaskManager implements TaskManager {
         }
         task.setId(generateId(task));
         putTaskToMap(task);
+        timeMan.addToRanged(task);
     }
 
-    public static <T extends Task> void putTaskToMap(T task) {
-        try {
-            switch (TaskFamily.getEnumFromClass(task.getClass())) {
-                case SUBTASK:
-                    SubTask subTask = (SubTask) task;
-                    subTask.getMyEpic().getMySubTaskMap().put(subTask.getId(), subTask);
-                    subTask.getMyEpic().setStatus();
-                case EPICTASK:
-                case TASK:
-                    tasks.get(TaskFamily.getEnumFromClass(task.getClass())).put(task.getId(), task);
-                    break;
-            }
-        } catch (NoMatchesFoundException e) {
-            e.printStackTrace();
-            System.out.println("В этом методе 2 ссылки на метод, который кидает исключение.");
-        }
+    public <T extends Task> void createTask(String startDateTime, int durationInMin, T task) {
+        createTask(task);
+        timeMan.setTime(startDateTime, durationInMin, task);
     }
 
     @Override
@@ -100,20 +48,59 @@ public class InMemoryTaskManager implements TaskManager {
         putTaskToMap(task);
     }
 
-    public boolean isFoundType(TaskFamily type) {
+    public <T extends Task> void renewTask(String startDateTime, int durationInMin, T task) {
+        putTaskToMap(task);
+        timeMan.setTime(startDateTime, durationInMin, task);
+    }
+
+    @Override
+    public <T extends Task> void removeTask(int id) {
         try {
-            for (TaskFamily taskType : tasks.keySet()) {
-                if (type.equals(taskType)) {
-                    return true;
+            if (!isFoundById(id)) {
+                throw new NoMatchesFoundException("ID не нашлось!");
+            } else {
+                T task = getTaskNH(id);
+
+                switch (defineTypeById(id)) {
+                    case SUBTASK:
+                        SubTask subTask = (SubTask) task;
+                        subTask.getMyEpic().getMySubTaskMap().remove(id);
+                        subTask.getMyEpic().setStatus();
+                        subTask.getMyEpic().setTime();
+                        break;
+                    case EPICTASK:
+                        EpicTask epic = (EpicTask) task;
+                        for (SubTask mySub : epic.getMySubTaskMap().values()) {
+                            histMan.remove(mySub.getId());
+                            timeMan.removeFromRanged(task);
+                            timeMan.removeFromValidation(task);
+                            tasks.get(TaskFamily.getEnumFromClass(mySub.getClass())).remove(mySub.getId());
+                            mySub.removeMyEpicLink();// это для GC
+                        }
+                        epic.removeMySubTaskMap();// это тоже для GC
+                        break;
                 }
+                histMan.remove(id);
+                timeMan.removeFromRanged(task);
+                timeMan.removeFromValidation(task);
+                tasks.get(TaskFamily.getEnumFromClass(task.getClass())).remove(id);
             }
-            throw new NoMatchesFoundException("Задач типа " + type + " не существует!");
         } catch (NoMatchesFoundException e) {
-            System.out.println("Доступные типы задач:\n"
-                    + tasks.keySet());
             e.printStackTrace();
+            System.out.println("В этом методе 3 ссылки на метод, который кидает исключение.");
         }
-        return false;
+    }
+
+    @Override
+    public List<Task> getHistory() {
+        return histMan.getHistory();
+    }
+
+    @Override
+    public <T extends Task> T getTask(int id) {
+        T task = getTaskNH(id);
+        histMan.add(task);
+        return task;
     }
 
     @Override
@@ -149,10 +136,9 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public void removeAllTasks(TaskFamily type) {//Удаление всех задач.
         if (isFoundType(type)) {
-            for(Integer id : tasks.get(type).keySet()){
-                histMan.remove(id);
+            for (Integer id : tasks.get(type).keySet()) {
+                removeTask(id);
             }
-            tasks.get(type).clear();
         }
     }
 
@@ -160,15 +146,106 @@ public class InMemoryTaskManager implements TaskManager {
     public void removeAllTasks() {
         tasks.clear();
         histMan.clearHistory();
+        timeMan.clear();
         initializeTasksMap();
     }
 
-    public ArrayList<String> getEpicSubsList(EpicTask epic) { //Получение списка
+    protected ArrayList<String> getEpicSubsList(EpicTask epic) { //Получение списка
         // всех подзадач определённого эпика.
         return epic.getMySubTaskList();
     }
 
-    public static boolean isFoundById(int id) {
+    protected static <T extends Task> T getTaskNH(int id) {//NH - no History
+        T task = null;
+        if (isFoundById(id))
+            for (int index : tasks.get(defineTypeById(id)).keySet()) {
+                if (index == id) {
+                    task = (T) tasks.get(defineTypeById(id)).get(id);
+                    break;
+                }
+            }
+        return task;
+    }
+
+    protected static <T extends Task> void putTaskToMap(T task) {
+        try {
+            switch (TaskFamily.getEnumFromClass(task.getClass())) {
+                case SUBTASK:
+                    SubTask subTask = (SubTask) task;
+                    subTask.getMyEpic().getMySubTaskMap().put(subTask.getId(), subTask);
+                    subTask.getMyEpic().setStatus();
+                    subTask.getMyEpic().setTime();
+                case EPICTASK:
+                case TASK:
+                    tasks.get(TaskFamily.getEnumFromClass(task.getClass())).put(task.getId(), task);
+                    break;
+            }
+        } catch (NoMatchesFoundException e) {
+            e.printStackTrace();
+            System.out.println("В этом методе 2 ссылки на метод, который кидает исключение.");
+        }
+    }
+
+    protected static TaskFamily defineTypeById(int id) {
+        TaskFamily type = null;
+        int idToOrdinal = Integer.parseInt(String.valueOf(Integer.toString(id).charAt(0))) - 1;
+
+        try {
+            for (TaskFamily TF : TaskFamily.values()) {
+                if (idToOrdinal == TF.ordinal()) {
+                    type = TF;
+                    break;
+                }
+            }
+            if (type == null) {
+                throw new NoMatchesFoundException("Сектор \"банкрот\" на барабане!");
+            }
+        } catch (NoMatchesFoundException e) {
+            System.out.println("type=null, defineTypeById=null");
+            e.printStackTrace();
+        }
+        return type;
+    }
+
+    private void initializeTasksMap() {
+        if (tasks == null || tasks.isEmpty()) {
+            tasks = new HashMap<>();
+            tasks.put(TaskFamily.TASK, new HashMap<>());
+            tasks.put(TaskFamily.EPICTASK, new HashMap<>());
+            tasks.put(TaskFamily.SUBTASK, new HashMap<>());
+        }
+    }
+
+    private boolean isFoundType(TaskFamily type) {
+        try {
+            for (TaskFamily taskType : tasks.keySet()) {
+                if (type.equals(taskType)) {
+                    return true;
+                }
+            }
+            throw new NoMatchesFoundException("Задач типа " + type + " не существует!");
+        } catch (NoMatchesFoundException e) {
+            System.out.println("Доступные типы задач:\n"
+                    + tasks.keySet());
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    private int generateId(Task task) {
+        DecimalFormat df = new DecimalFormat("00000");
+        int id = 0;
+        try {
+            TaskFamily TF = TaskFamily.getEnumFromClass(task.getClass());
+            id = Integer.parseInt((TF.ordinal() + 1) + df.format(idCounter++));
+        } catch (NoMatchesFoundException e) {
+            e.printStackTrace();
+            System.out.println("В этом методе 1 ссылка на метод, который кидает исключение.");
+        }
+        return id;
+    }
+
+    private static boolean isFoundById(int id) {
         Object task = null;
         boolean found = false;
 
@@ -192,65 +269,5 @@ public class InMemoryTaskManager implements TaskManager {
             return false;
         }
         return true;
-    }
-
-    @Override
-    public <T extends Task> T getTask(int id) {
-        T task = getTaskNH(id);
-        histMan.add(task);
-        return task;
-    }
-
-    public static <T extends Task> T getTaskNH(int id) {//NH - no History
-        T task = null;
-        if (isFoundById(id))
-            for (int index : tasks.get(defineTypeById(id)).keySet()) {
-                if (index == id) {
-                    task = (T) tasks.get(defineTypeById(id)).get(id);
-                    break;
-                }
-            }
-        return task;
-    }
-
-    //...добавить метод void remove(int id) для удаления задачи из просмотра.
-    // И реализовать его в классе InMemoryHistoryManager.
-    // Добавьте его вызов при удалении задач, чтобы они также удалялись из истории просмотров.
-    @Override
-    public <T extends Task> void removeTask(int id) {
-        try {
-            if (!isFoundById(id)) {
-                throw new NoMatchesFoundException("ID не нашлось!");
-            } else {
-                T task = getTaskNH(id);
-
-                switch (defineTypeById(id)) {
-                    case SUBTASK:
-                        SubTask subTask = (SubTask) task;
-                        subTask.getMyEpic().getMySubTaskMap().remove(id);
-                        subTask.getMyEpic().setStatus();
-                        break;
-                    case EPICTASK:
-                        EpicTask epic = (EpicTask) task;
-                        for (SubTask mySub : epic.getMySubTaskMap().values()) {
-                            histMan.remove(mySub.getId());
-                            tasks.get(TaskFamily.getEnumFromClass(mySub.getClass())).remove(mySub.getId());
-                            mySub.removeMyEpicLink();// это для GC
-                        }
-                        epic.removeMySubTaskMap();// это тоже для GC
-                        break;
-                }
-                histMan.remove(id);
-                tasks.get(TaskFamily.getEnumFromClass(task.getClass())).remove(id);
-            }
-        } catch (NoMatchesFoundException e) {
-            e.printStackTrace();
-            System.out.println("В этом методе 3 ссылки на метод, который кидает исключение.");
-        }
-    }
-
-    @Override
-    public List<Task> getHistory() {
-        return histMan.getHistory();
     }
 }

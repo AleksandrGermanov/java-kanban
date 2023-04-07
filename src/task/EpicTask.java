@@ -2,26 +2,52 @@ package task;
 
 import myExceptions.IllegalStatusChangeException;
 
-import java.util.HashMap;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Objects;
+import java.time.LocalDateTime;
+import java.util.*;
+import java.util.function.BinaryOperator;
+import java.util.function.Function;
+import java.util.function.Predicate;
 
 
 public class EpicTask extends Task {
-    private HashMap<Integer, SubTask> mySubTaskMap;
+    private Map<Integer, SubTask> mySubTaskMap;
 
     public EpicTask() {
         mySubTaskMap = new HashMap<>();
     }
 
-    public EpicTask(String name, String description){
+    public EpicTask(String name, String description) {
         super(name, description);
         mySubTaskMap = new HashMap<>();
     }
 
-    public HashMap<Integer, SubTask> getMySubTaskMap() {
+    @Override
+    public void setStatus(Statuses status) {
+        try {
+            throw new IllegalStatusChangeException(
+                    "Хорошая попытка, но статус эпиков не может быть установлен в ручную!");
+        } catch (IllegalStatusChangeException e) {
+            e.printStackTrace();
+            setStatus();
+        }
+    }
+
+    @Override
+    public void setStartTimeOpt(Optional<LocalDateTime> startTimeOpt) {
+        setStartTimeOpt();
+    }
+
+    @Override
+    public void setDurationOpt(Optional<Integer> durationOpt) {
+        setDurationOpt();
+    }
+
+    @Override
+    public void setEndTimeOpt(Optional<LocalDateTime> endTimeOpt) {
+        setEndTimeOpt();
+    }
+
+    public Map<Integer, SubTask> getMySubTaskMap() {
         return mySubTaskMap;
     }
 
@@ -59,15 +85,55 @@ public class EpicTask extends Task {
         }
     }
 
-    @Override
-    public void setStatus(Statuses status) {
-        try {
-            throw new IllegalStatusChangeException(
-                    "Хорошая попытка, но статус эпиков не может быть установлен в ручную!");
-        } catch (IllegalStatusChangeException e) {
-            e.printStackTrace();
-            setStatus();
+    public void removeMySubTaskMap() {
+        mySubTaskMap = null;
+    }
+
+    public void setTime(){
+        setStartTimeOpt();
+        setDurationOpt();
+        setEndTimeOpt();
+    }
+
+    public void setStartTimeOpt() {
+            this.startTimeOpt = mySubTaskMap.values().stream()
+                    .filter(subTask -> subTask.getStartTimeOpt().isPresent())
+                    .map(subTask -> subTask.getStartTimeOpt().get())
+                    .reduce(BinaryOperator.minBy((start1, start2) -> {
+                        if (start1.isBefore(start2)) {
+                            return -1;
+                        } else if (start1.isAfter(start2)) {
+                            return 1;}
+                        else{
+                            return 0;
+                        }
+                    }));
         }
+
+    public void setDurationOpt() {
+        Predicate<SubTask> containsDuration = subTask -> subTask.getDurationOpt().isPresent();
+        Function<SubTask, Integer> getDuration = subTask -> subTask.getDurationOpt().get();
+        BinaryOperator<Integer> add = Integer::sum;
+
+        this.durationOpt = mySubTaskMap.values().stream()
+                .filter(containsDuration)
+                .map(getDuration)
+                .reduce(add);
+    }
+
+    public void setEndTimeOpt(){
+        this.endTimeOpt = mySubTaskMap.values().stream()
+                .filter(subTask -> subTask.getEndTimeOpt().isPresent())
+                .map(subTask -> subTask.getEndTimeOpt().get())
+                .reduce(BinaryOperator.maxBy((end1, end2) -> {
+                    if (end1.isBefore(end2)) {
+                        return -1;
+                    } else if (end1.isAfter(end2)) {
+                        return 1;}
+                    else{
+                        return 0;
+                    }
+                }));
     }
 
     @Override
@@ -86,15 +152,16 @@ public class EpicTask extends Task {
 
     @Override
     public String toString() {
-        return "EpicTask{mySubTaskMap.size=" + mySubTaskMap.size()
+        return "EpicTask{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", status=" + status +
+                ", description='" + description + '\'' +
+                ", ^\bstartTimeOpt=" + startTimeOpt +
+                ", durationOpt=" + durationOpt +
+                ", endTimeOpt=" + endTimeOpt +
+                ", ^\bmySubTaskMap.size=" + mySubTaskMap.size()
                 + ", mySubTaskMap.keySet=" + mySubTaskMap.keySet()
-                + ", name='" + name + '\''
-                + "^\b, description='" + description + '\''
-                + ", Id=" + id +
-                ", status='" + status + '\'' + "}^\b";
-    }
-
-    public void removeMySubTaskMap() {
-        mySubTaskMap = null;
+                + "}^\b";
     }
 }

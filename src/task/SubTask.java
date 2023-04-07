@@ -42,13 +42,19 @@ public class SubTask extends Task {
         return Objects.hash(super.hashCode(), myEpic);
     }
 
+
     @Override
     public String toString() {
-        return "SubTask{myEpicId=" + getMyEpicId()
-                + ", name='" + name + '\''
-                + ", description='" + description + '\''
-                + ", Id=" + id
-                + ", status='" + status + '\'' + "}^\b";
+        return "SubTask{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", status=" + status +
+                ", description='" + description + '\'' +
+                ", ^\bstartTimeOpt=" + startTimeOpt +
+                ", durationOpt=" + durationOpt +
+                ", endTimeOpt=" + endTimeOpt +
+                ", myEpicId=" + myEpic.getId() +
+                "}^\b";
     }
 }
 

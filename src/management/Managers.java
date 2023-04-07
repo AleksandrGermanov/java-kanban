@@ -2,6 +2,8 @@ package management;
 
 import management.history.*;
 import management.task.*;
+import management.time.OneThreadTimeManager;
+import management.time.TimeManager;
 
 public class Managers {
 
@@ -14,5 +16,9 @@ public class Managers {
 
     public static HistoryManager getDefaultHistory(){
         return new InMemoryHistoryManager();
+    }
+
+    public static TimeManager getDefaultTime() {
+        return new OneThreadTimeManager();
     }
 }

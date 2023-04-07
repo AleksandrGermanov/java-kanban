@@ -10,18 +10,18 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Random;
 
-public class TestTaskManager extends FileBackedTaskManager {
+public class ManualTestTaskManager extends FileBackedTaskManager {
     private static final Random random = new Random();
     public InMemoryHistoryManager hm = new InMemoryHistoryManager();
 
-    public TestTaskManager(){
+    public ManualTestTaskManager(){
     }
-    public TestTaskManager(Path path){
+    public ManualTestTaskManager(Path path){
         super(path);
     }
 
     public <T extends Task> void createRandomTask(T task) {
-        task.setName(TestTaskManager.randomTaskNameCreator());
+        task.setName(ManualTestTaskManager.randomTaskNameCreator());
         task.setDescription("Нужно просто пойти и " + task.getName());
         createTask(task);
     }
@@ -155,7 +155,7 @@ public class TestTaskManager extends FileBackedTaskManager {
         System.out.println("Осталось " + remaining + " объектов.");
     }
 
-    public void randomTaskGetter(int quantity) {
+    public void getRandomTasks(int quantity) {
         StringBuilder idsString = new StringBuilder();
         for (int i = 0; i < quantity; i++) {
             ArrayList<Integer> allKeys = getAllKeysList();

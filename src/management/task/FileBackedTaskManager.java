@@ -14,9 +14,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
+
+import static management.time.OneThreadTimeManager.DATE_TIME_FORMATTER;
 
 
 public class FileBackedTaskManager extends InMemoryTaskManager {
@@ -25,79 +29,16 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
 
     public FileBackedTaskManager() {
     }
+
     public FileBackedTaskManager(Path csvPath) {
         loadFromFile(csvPath);
     }
 
     /***
-     *Спасибо за комментарии!
-     *
-     * "Лишнюю" инициализацию удалил.
-     * Она использовалась для тестирования сценария,
-     * при котором мы имеем пустой файл data.csv
-     * (первая инициализация создавала этот файл).
-     *
-     * По поводу switch - у меня сейчас Amazon Corretto 11,
-     * согласно требованиям курса.
-     * (Спринт 1/10: 1 → Тема 6/7: JDK и среда разработки → Урок 2/6)
+
      */
     public static void main(String[] args) {
-        try {
-            Files.deleteIfExists(csvPath);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        System.out.println("проверяем работу с пустыми данными");
-        TestTaskManager ttm = new TestTaskManager(csvPath);
-        System.out.println(ttm.getTaskList());
-        System.out.println(ttm.getHistory());
 
-        System.out.println("\n\n\nпроверяем создание задач");
-        ttm.createTask(new Task(",,,,,,", "Проверяем конверсию \",\""));
-        ttm.createRandomTasks(9);
-        System.out.println(ttm.getTaskList());
-        System.out.println(ttm.getHistory());
-
-        System.out.println("\n\n\nпроверяем формирование истории");
-        ttm = new TestTaskManager(csvPath);
-        System.out.println(ttm.getTaskList());
-        ttm.randomTaskGetter(10);
-        ttm.hm.printHistoryList();
-
-        System.out.println("\n\n\nпроверяем восстановление данных");
-        ArrayList<String> oldTaskList = ttm.getTaskList();
-        List<Task> oldHistory = ttm.getHistory();
-        ttm = new TestTaskManager(csvPath);
-        System.out.println("сравниваем листы задач: " + oldTaskList.equals(ttm.getTaskList()));
-        System.out.println("сравниваем листы истории: " + ttm.getHistory().equals(oldHistory));
-
-        System.out.println("\n\n\nпроверяем обновление задач");
-        ttm = new TestTaskManager(csvPath);
-        System.out.println(ttm.getTaskList());
-        ttm.renewRandomTasks(60);
-        System.out.println(ttm.getTaskList());
-        ttm.hm.printHistoryList();
-
-        System.out.println("\n\nпроверяем восстановление данных");
-        ArrayList<String> oldTaskList2 = ttm.getTaskList();
-        List<Task> oldHistory2 = ttm.getHistory();
-        ttm = new TestTaskManager(csvPath);
-        System.out.println("сравниваем листы задач: " + oldTaskList2.equals(ttm.getTaskList()));
-        System.out.println("сравниваем листы истории: " + ttm.getHistory().equals(oldHistory2));
-
-        System.out.println("\n\n\nпроверяем удаление задач");
-        ttm = new TestTaskManager(csvPath);
-        System.out.println(ttm.getTaskList());
-        ttm.removeRandomTasks(30);
-        System.out.println(ttm.getTaskList());
-        ttm.hm.printHistoryList();
-
-        System.out.println("\n\nпроверяем восстановление данных");
-        ArrayList<String> oldTaskList3 = ttm.getTaskList();
-        List<Task> oldHistory3 = ttm.getHistory();
-        ttm = new TestTaskManager(csvPath);
-        System.out.println("сравниваем листы задач: " + oldTaskList3.equals(ttm.getTaskList()));
-        System.out.println("сравниваем листы истории: " + ttm.getHistory().equals(oldHistory3));
     }
 
     @Override
@@ -139,6 +80,12 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
 
     private static <T extends Task> String taskToString(T task) { //в тз String toString(Task task)
         String data = null;
+        String startTime = task.getStartTimeOpt().isEmpty()
+                ? "empty" : task.getStartTimeOpt().get().format(DATE_TIME_FORMATTER);
+        String duration = task.getStartTimeOpt().isEmpty()
+                ? "empty" : task.getDurationOpt().get().toString();
+        String endTime = task.getEndTimeOpt().isEmpty()
+                ? "empty" : task.getEndTimeOpt().get().format(DATE_TIME_FORMATTER);
 
         try {
             data = task.getId() + "," + defineTypeById(task.getId())
@@ -146,7 +93,8 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
                     //или описании задачи запятую, без замены символа обратная сборка поломается,
                     //т.к. сплит неправильно поделит поля.
                     + "," + task.getStatus()
-                    + "," + task.getDescription().replace(',', '¶');
+                    + "," + task.getDescription().replace(',', '¶')
+                    + "," + startTime + "," + duration + "," + endTime;
             if (TaskFamily.getEnumFromClass(task.getClass()).equals(TaskFamily.SUBTASK)) {
                 SubTask sub = (SubTask) task;
                 data += "," + sub.getMyEpicId();
@@ -159,7 +107,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
     }
 
     private <T extends Task> void writeCSVMapToFile() throws IOException {
-        String toFile = "id,type,name,status,description,epic";
+        String toFile = "id,type,name,status,description,start,duration,end,epic";
         Files.writeString(csvPath, toFile + "\n",
                 StandardCharsets.UTF_8, StandardOpenOption.TRUNCATE_EXISTING);
         if (!tasks.isEmpty()) {
@@ -213,13 +161,14 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         for (int i = 0; i < fields.length; i++) {
             fields[i] = fields[i].replace('¶', ',');
         }
-        //id,type,name,status,description,epic
+        //id,type,name,status,description,start,duration,end,epic
         TaskFamily TF = TaskFamily.valueOf(fields[1]);
         switch (TF) {
             case TASK:
                 Task task = new Task(fields[2], fields[4]);
                 task.setId(Integer.parseInt(fields[0]));
                 task.setStatus(Statuses.valueOf(fields[3]));
+                setTimeFromString(task, fields[5], fields[6], fields[7]);
                 value = task;
                 break;
             case EPICTASK:
@@ -228,17 +177,29 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
                 value = epic;
                 break;
             case SUBTASK:
-                int epicId = Integer.parseInt(fields[5]);
+                int epicId = Integer.parseInt(fields[8]);
                 if (tasks.get(TaskFamily.EPICTASK).containsKey(epicId)) {
                     SubTask sub = new SubTask(getTaskNH(epicId), fields[2], fields[4]);
                     sub.setId(Integer.parseInt(fields[0]));
                     sub.setStatus(Statuses.valueOf(fields[3]));
-                    sub.getMyEpic().setStatus();
+                    setTimeFromString(sub, fields[5], fields[6], fields[7]);
                     value = sub;
                 }
                 break;
         }
         return value;
+    }
+
+    private static <T extends Task> void setTimeFromString(T task, String start, String duration, String end){
+        Optional<LocalDateTime> startOpt = start.equals("empty")
+                ? Optional.empty() : Optional.of(LocalDateTime.parse(start, DATE_TIME_FORMATTER));
+        task.setStartTimeOpt(startOpt);
+        Optional<Integer> duraOpt = duration.equals("empty")
+                ? Optional.empty() : Optional.of(Integer.parseInt(duration));
+        task.setDurationOpt(duraOpt);
+        Optional<LocalDateTime> endOpt = end.equals("empty")
+                ? Optional.empty() : Optional.of(LocalDateTime.parse(end, DATE_TIME_FORMATTER));
+        task.setEndTimeOpt(endOpt);
     }
 
     private static <T extends Task> void restoreTaskToMap(T task) {
