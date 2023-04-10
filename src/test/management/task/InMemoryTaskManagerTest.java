@@ -1,7 +1,10 @@
-package management.task;
+package test.management.task;
 
 import management.Managers;
+import management.task.InMemoryTaskManager;
 import management.time.TimeManager;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import task.EpicTask;
 import task.SubTask;
 import task.Task;
@@ -9,23 +12,13 @@ import task.Task;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
 import static org.junit.jupiter.api.Assertions.*;
 
 class InMemoryTaskManagerTest extends TaskManagerTest<InMemoryTaskManager> {
-    static InMemoryTaskManager taskMan = new InMemoryTaskManager();
 
     @BeforeEach
     void createTaskMan() {
-        super.taskMan = taskMan;
-        taskMan.removeAllTasks();
-    }
-
-    @Test
-    void createTask() {
-        super.createTask();
+        super.taskMan = new InMemoryTaskManager();
     }
 
     @Test
@@ -38,41 +31,16 @@ class InMemoryTaskManagerTest extends TaskManagerTest<InMemoryTaskManager> {
     }
 
     @Test
-    void renewTask() {
-        super.renewTask();
-    }
-
-    @Test
     void testRenewTask() {
         Task task = new Task();
         taskMan.createTask("20.02.2002 20:02", 58, task);
-        LocalDateTime oldStart = task.getStartTimeOpt().get();
-        int oldDuration = task.getDurationOpt().get();
-        LocalDateTime oldFinish = task.getEndTimeOpt().get();
+        LocalDateTime oldStart = task.getStartTime();
+        int oldDuration = task.getDuration();
+        LocalDateTime oldFinish = task.getEndTime();
         taskMan.renewTask("20.02.2002 20:15", 45, task);
-        assertNotEquals(oldStart, task.getStartTimeOpt().get());
-        assertNotEquals(oldDuration, task.getDurationOpt().get());
-        assertEquals(oldFinish, task.getEndTimeOpt().get());
-    }
-
-    @Test
-    void getAndRemoveTask() {
-        super.getAndRemoveTask();
-    }
-
-    @Test
-    void getHistory() {
-        super.getHistory();
-    }
-
-    @Test
-    void getTaskList() {
-        super.getTaskList();
-    }
-
-    @Test
-    void removeAllTasks() {
-        super.removeAllTasks();
+        assertNotEquals(oldStart, task.getStartTime());
+        assertNotEquals(oldDuration, task.getDuration());
+        assertEquals(oldFinish, task.getEndTime());
     }
 
     @Test

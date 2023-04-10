@@ -1,6 +1,7 @@
 package management.task;
 
 import myExceptions.NoMatchesFoundException;
+
 public enum TaskFamily {
     TASK,
     EPICTASK,
@@ -23,6 +24,7 @@ public enum TaskFamily {
         return TF;
 
     }
+
     private String asClassName() {
         String upperName = this.toString();
         String lowerName = upperName.toLowerCase();

@@ -1,12 +1,15 @@
-package task;
+package test.task;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import task.Statuses;
+import task.Task;
 
 import java.time.LocalDateTime;
-import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 class TaskTest {
     Task testTask;
@@ -39,31 +42,31 @@ class TaskTest {
 
     @Test
     void testStatusSetterGetter() {
-        assertEquals(Statuses.NEW, testTask.getStatus());
+        Assertions.assertEquals(Statuses.NEW, testTask.getStatus());
         testTask.setStatus(Statuses.IN_PROGRESS);
         assertEquals(Statuses.IN_PROGRESS, testTask.getStatus());
     }
 
     @Test
-    void testStartTimeOptSetterGetter() {
-        assertTrue(testTask.getStartTimeOpt().isEmpty());
+    void testStartTimeSetterGetter() {
+        assertNull(testTask.getStartTime());
         LocalDateTime testLDT = LocalDateTime.now();
-        testTask.setStartTimeOpt(Optional.of(testLDT));
-        assertEquals(testLDT, testTask.getStartTimeOpt().get());
+        testTask.setStartTime(testLDT);
+        assertEquals(testLDT, testTask.getStartTime());
     }
 
     @Test
-    void testDurationOptSetterGetter() {
-        assertTrue(testTask.getDurationOpt().isEmpty());
-        testTask.setDurationOpt(Optional.of(15));
-        assertEquals(15, testTask.getDurationOpt().get());
+    void testDurationSetterGetter() {
+        assertNull(testTask.getDuration());
+        testTask.setDuration(15);
+        assertEquals(15, testTask.getDuration());
     }
 
     @Test
-    void testEndTimeOptSetterGetter() {
-        assertTrue(testTask.getEndTimeOpt().isEmpty());
+    void testEndTimeSetterGetter() {
+        assertNull(testTask.getEndTime());
         LocalDateTime testLDT = LocalDateTime.now();
-        testTask.setEndTimeOpt(Optional.of(testLDT));
-        assertEquals(testLDT, testTask.getEndTimeOpt().get());
+        testTask.setEndTime(testLDT);
+        assertEquals(testLDT, testTask.getEndTime());
     }
 }

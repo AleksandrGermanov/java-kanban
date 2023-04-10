@@ -35,16 +35,16 @@ public class InMemoryHistoryManager implements HistoryManager {
         System.out.println("***");
         if (historyList != null) {
             for (Task task : historyList) {
-                System.out.print(task.toString().replace("^\b", System.lineSeparator()));
+                System.out.print(task.toString());
             }
         }
         System.out.println("***\n");
     }
 
     private static class CustomLinkedList<T extends Task> { //Этот класс не отдельный
-        private final Map<Integer, Node<Task>> nodeMap = new HashMap<>();
         private static Node<Task> head;
         private static Node<Task> tail;
+        private final Map<Integer, Node<Task>> nodeMap = new HashMap<>();
 
         void addNode(T task) {
             if (nodeMap.isEmpty()) {
@@ -61,14 +61,14 @@ public class InMemoryHistoryManager implements HistoryManager {
             if (nodeMap.containsKey(task.getId())) {
                 removeNode(task.getId());
             }
-            if(!nodeMap.isEmpty()) {
+            if (!nodeMap.isEmpty()) {
                 Node<Task> node = new Node<>(false, task, task.getId());
                 tail.isTail = false;
                 tail.next = node;
                 node.prev = tail;
                 tail = node;
                 nodeMap.put(node.taskId, node);
-            } else{
+            } else {
                 addNode(task);
             }
         }
@@ -120,12 +120,12 @@ public class InMemoryHistoryManager implements HistoryManager {
     }
 
     private static class Node<T extends Task> {
+        final int taskId;
+        final T task;
         boolean isHead;
         boolean isTail = true; //новый узел всегда добавляется в конец
         Node<T> prev;
         Node<T> next;
-        final int taskId;
-        final T task;
 
         public Node(boolean isHead, T task, int taskId) {
             this.isHead = isHead;

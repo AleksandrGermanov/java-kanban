@@ -11,7 +11,7 @@ public class SubTask extends Task {
         myEpic = epic;
     }
 
-    public SubTask(EpicTask epic, String name, String description){
+    public SubTask(EpicTask epic, String name, String description) {
         super(name, description);
         myEpic = epic;
     }
@@ -39,7 +39,7 @@ public class SubTask extends Task {
 
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), myEpic);
+        return Objects.hash(super.hashCode(), myEpic.id);
     }
 
 
@@ -50,11 +50,11 @@ public class SubTask extends Task {
                 ", name='" + name + '\'' +
                 ", status=" + status +
                 ", description='" + description + '\'' +
-                ", ^\bstartTimeOpt=" + startTimeOpt +
-                ", durationOpt=" + durationOpt +
-                ", endTimeOpt=" + endTimeOpt +
+                ", " + System.lineSeparator() + "startTime=" + startTime +
+                ", duration=" + duration +
+                ", endTime=" + endTime +
                 ", myEpicId=" + myEpic.getId() +
-                "}^\b";
+                "}" + System.lineSeparator() + "";
     }
 }
 

@@ -9,10 +9,25 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
+/***
+ * Отсортируйте все задачи по приоритету — то есть по startTime. Если дата старта не задана,
+ * добавьте задачу в конец списка задач, подзадач, отсортированных по startTime.
+ * Напишите новый метод getPrioritizedTasks, возвращающий список задач и подзадач в заданном порядке.
+ * Предполагается, что пользователь будет часто запрашивать этот список задач и подзадач,
+ * поэтому подберите подходящую структуру данных для хранения.
+ * Сложность получения должна быть уменьшена с O(n log n) до O(n).
+ *
+ * rangedSet хранит ВСЕ созданные задачи, вне зависимости от типа и наличия установленного времени выполнения.
+ *
+ * validationSet хранит только задачи Task и SubTask с заданным временем выполнения. Это сделано
+ * для того, чтобы избежать пересечения времени эпиков с их подзадачами, а также для обработки ситуаций,
+ * когда между двумя подзадачами одного эпика пользователь вносит обычную задачу или подзадачу другого
+ * эпика (если нет пересечения по времени, такие ситуации разрешены).
+ */
 public class OneThreadTimeManager implements TimeManager {
-    private static final Set<Task> RANGED_SET = new TreeSet<>();
-    private static final Set<Task> VALIDATION_SET = new TreeSet<>();
     public static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
+    private final Set<Task> rangedSet = new TreeSet<>();
+    private final Set<Task> validationSet = new TreeSet<>();
 
     @Override
     public <T extends Task> void setTime(String startString, Integer duration, T task) {
@@ -23,13 +38,13 @@ public class OneThreadTimeManager implements TimeManager {
                 case TASK:
                     setTimeValidated(start, duration, task);
                     if (isTimeSet(task)) {
-                        VALIDATION_SET.add(task);
+                        validationSet.add(task);
                     }
                     break;
                 case SUBTASK:
                     setTimeValidated(start, duration, task);
                     if (isTimeSet(task)) {
-                        VALIDATION_SET.add(task);
+                        validationSet.add(task);
                     }
                     SubTask sub = (SubTask) task;
                     sub.getMyEpic().setTime();
@@ -42,88 +57,88 @@ public class OneThreadTimeManager implements TimeManager {
 
     @Override
     public List<Task> getPrioritizedTasks() {
-        return new ArrayList<>(RANGED_SET);
+        return new ArrayList<>(rangedSet);
     }
 
     @Override
     public boolean isTimeSet(Task task) {
-        return task.getStartTimeOpt().isPresent()
-                && task.getDurationOpt().isPresent()
-                && task.getEndTimeOpt().isPresent();
+        return task.getStartTime() != null
+                && task.getDuration() != null
+                && task.getEndTime() != null;
     }
 
     @Override
     public void addToRanged(Task task) {
-        RANGED_SET.add(task);
+        rangedSet.add(task);
     }
 
     @Override
     public void removeFromRanged(Task task) {
-        RANGED_SET.remove(task);
+        rangedSet.remove(task);
     }
 
     @Override
     public void removeFromValidation(Task task) {
-        VALIDATION_SET.remove(task);
+        validationSet.remove(task);
     }
 
     @Override
     public void clear() {
-        RANGED_SET.clear();
-        VALIDATION_SET.clear();
+        rangedSet.clear();
+        validationSet.clear();
     }
 
     private <T extends Task> void setTimeDefault(LocalDateTime start, Integer duration, T task) {
-        task.setStartTimeOpt(Optional.of(start));
-        task.setDurationOpt(Optional.of(duration));
-        task.setEndTimeOpt(Optional.of(start.plusMinutes(duration)));
+        task.setStartTime(start);
+        task.setDuration(duration);
+        task.setEndTime(start.plusMinutes(duration));
     }
 
     private <T extends Task> void setTimeValidated(LocalDateTime start, Integer duration, T task) {
         boolean wasInValidationSet = false;
-        Optional<LocalDateTime> oldStart = Optional.empty();
-        Optional<Integer> oldDuration = Optional.empty();
-        Optional<LocalDateTime> oldEnd = Optional.empty();
+        LocalDateTime oldStart = null;
+        Integer oldDuration = null;
+        LocalDateTime oldEnd = null;
 
-        if (VALIDATION_SET.contains(task)) {
-            VALIDATION_SET.remove(task);//если не удалить таску, будут проблемы с обновлением задачи
+        if (validationSet.contains(task)) {
+            validationSet.remove(task);//если не удалить таску, будут проблемы с обновлением задачи
             // (возможны пересечения старого и нового времени одной и той же задачи).
             wasInValidationSet = true;
-            oldStart = task.getStartTimeOpt();
-            oldDuration = task.getDurationOpt();
-            oldEnd = task.getEndTimeOpt();
+            oldStart = task.getStartTime();
+            oldDuration = task.getDuration();
+            oldEnd = task.getEndTime();
         }
         setTimeDefault(start, duration, task);
         if (isValidatedByTime(task)) {
-            VALIDATION_SET.add(task);
+            validationSet.add(task);
         } else {
             System.out.println("Выполнение двух задач одновременно невозможно, мой однопоточный друг!\n" +
                     "Время выполнения задачи не будет изменено.");
-            task.setStartTimeOpt(oldStart);
-            task.setDurationOpt(oldDuration);
-            task.setEndTimeOpt(oldEnd);
+            task.setStartTime(oldStart);
+            task.setDuration(oldDuration);
+            task.setEndTime(oldEnd);
             if (wasInValidationSet) {
-                VALIDATION_SET.add(task);
+                validationSet.add(task);
             }
         }
     }
 
     private boolean isValidatedByTime(Task task) {
-        List<Task> list = new ArrayList<>(VALIDATION_SET);
+        List<Task> list = new ArrayList<>(validationSet);
         int binSearch = Collections.binarySearch(list, task);
         if (binSearch >= 0) {
             return false;
         }
         int possiblePlace = -(binSearch + 1);
         if (possiblePlace > 0) {
-            if (list.get(possiblePlace - 1).getEndTimeOpt().get()
-                    .isAfter(task.getStartTimeOpt().get())) {
+            if (list.get(possiblePlace - 1).getEndTime()
+                    .isAfter(task.getStartTime())) {
                 return false;
             }
         }
         if (possiblePlace < list.size()) {
-            return (list.get(possiblePlace).getStartTimeOpt().get()
-                    .isAfter(task.getEndTimeOpt().get()));
+            return (list.get(possiblePlace).getStartTime()
+                    .isAfter(task.getEndTime()));
         }
         return true;
     }

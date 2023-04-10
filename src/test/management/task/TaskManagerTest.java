@@ -1,5 +1,7 @@
-package management.task;
+package test.management.task;
 
+import management.task.TaskFamily;
+import management.task.TaskManager;
 import org.junit.jupiter.api.Test;
 import task.EpicTask;
 import task.SubTask;
@@ -85,7 +87,7 @@ abstract class TaskManagerTest<T extends TaskManager> {
         taskMan.createTask(new Task());
         epic = new EpicTask();
         taskMan.createTask(epic);
-        sub  = new SubTask(epic);
+        sub = new SubTask(epic);
         taskMan.createTask(sub);
         taskMan.removeAllTasks();
         assertEquals(emptyTaskList, taskMan.getTaskList());

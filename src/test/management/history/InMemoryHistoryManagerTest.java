@@ -1,5 +1,6 @@
-package management.history;
+package test.management.history;
 
+import management.history.InMemoryHistoryManager;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -9,14 +10,14 @@ import task.Task;
 
 import java.util.ArrayList;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class InMemoryHistoryManagerTest {
-    InMemoryHistoryManager hm = new InMemoryHistoryManager();
     static Task task = new Task();
     static EpicTask epic = new EpicTask();
     static SubTask sub1 = new SubTask(epic);
     static SubTask sub2 = new SubTask(epic);
+    InMemoryHistoryManager hm = new InMemoryHistoryManager();
 
     @BeforeAll
     static void setId() {

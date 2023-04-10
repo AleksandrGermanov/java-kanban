@@ -1,5 +1,6 @@
-package management.time;
+package test.management.time;
 
+import management.time.OneThreadTimeManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import task.EpicTask;
@@ -8,17 +9,16 @@ import task.Task;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Optional;
 
 import static management.time.OneThreadTimeManager.DATE_TIME_FORMATTER;
 import static org.junit.jupiter.api.Assertions.*;
 
 class OneThreadTimeManagerTest {
-    OneThreadTimeManager tm = new OneThreadTimeManager();
     static Task task;
     static EpicTask epic;
     static SubTask sub1;
     static SubTask sub2;
+    OneThreadTimeManager tm = new OneThreadTimeManager();
 
     @BeforeEach
     void generateTasksAndSetId() {
@@ -41,10 +41,10 @@ class OneThreadTimeManagerTest {
     void setTime() {
         tm.setTime("01.01.1991 00:00", 10, task);
         assertTrue(tm.isTimeSet(task));
-        assertEquals(LocalDateTime.parse("01.01.1991 00:00", DATE_TIME_FORMATTER), task.getStartTimeOpt().get());
-        assertEquals(10, task.getDurationOpt().get());
+        assertEquals(LocalDateTime.parse("01.01.1991 00:00", DATE_TIME_FORMATTER), task.getStartTime());
+        assertEquals(10, task.getDuration());
         assertEquals(LocalDateTime.parse("01.01.1991 00:00", DATE_TIME_FORMATTER).plusMinutes(10),
-                task.getEndTimeOpt().get());
+                task.getEndTime());
         tm.setTime("01.01.1991 00:00", 10, sub1);
         assertFalse(tm.isTimeSet(sub1));
         tm.setTime("01.01.1991 00:09", 15, sub1);
@@ -53,7 +53,7 @@ class OneThreadTimeManagerTest {
         assertFalse(tm.isTimeSet(sub2));
         tm.setTime("01.01.1991 00:09", 15, task);
         assertEquals(LocalDateTime.parse("01.01.1991 00:09", DATE_TIME_FORMATTER),
-                task.getStartTimeOpt().get());
+                task.getStartTime());
     }
 
     @Test
@@ -80,11 +80,11 @@ class OneThreadTimeManagerTest {
     void isTimeSet() {
         tm.isTimeSet(task);
         assertFalse(tm.isTimeSet(task));
-        task.setStartTimeOpt(Optional.of(LocalDateTime.now()));
+        task.setStartTime(LocalDateTime.now());
         assertFalse(tm.isTimeSet(task));
-        task.setDurationOpt(Optional.of(15));
+        task.setDuration(15);
         assertFalse(tm.isTimeSet(task));
-        task.setEndTimeOpt(Optional.of(LocalDateTime.now()));
+        task.setEndTime(LocalDateTime.now());
         assertTrue(tm.isTimeSet(task));
     }
 

@@ -3,16 +3,15 @@ package task;
 import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.Objects;
-import java.util.Optional;
 
 public class Task implements Comparable<Task> {
     protected int id;
     protected String name;
     protected Statuses status;
     protected String description;
-    protected Optional<LocalDateTime> startTimeOpt = Optional.empty();//опциональное поле
-    protected Optional<Integer> durationOpt = Optional.empty();
-    protected Optional<LocalDateTime> endTimeOpt = Optional.empty();// добавил это поле для более удобного поиска
+    protected LocalDateTime startTime = null;//опциональное поле
+    protected Integer duration = null;
+    protected LocalDateTime endTime = null;// добавил это поле для более удобного поиска
     //пересечений.
 
     public Task() {
@@ -57,28 +56,28 @@ public class Task implements Comparable<Task> {
         this.status = status;
     }
 
-    public Optional<LocalDateTime> getStartTimeOpt() {
-        return startTimeOpt;
+    public LocalDateTime getStartTime() {
+        return startTime;
     }
 
-    public void setStartTimeOpt(Optional<LocalDateTime> startTimeOpt) {
-        this.startTimeOpt = startTimeOpt;
+    public void setStartTime(LocalDateTime startTime) {
+        this.startTime = startTime;
     }
 
-    public Optional<Integer> getDurationOpt() {
-        return durationOpt;
+    public Integer getDuration() {
+        return duration;
     }
 
-    public void setDurationOpt(Optional<Integer> durationOpt) {
-        this.durationOpt = durationOpt;
+    public void setDuration(Integer duration) {
+        this.duration = duration;
     }
 
-    public Optional<LocalDateTime> getEndTimeOpt() {
-        return endTimeOpt;
+    public LocalDateTime getEndTime() {
+        return endTime;
     }
 
-    public void setEndTimeOpt(Optional<LocalDateTime> endTimeOpt) {
-        this.endTimeOpt = endTimeOpt;
+    public void setEndTime(LocalDateTime endTime) {
+        this.endTime = endTime;
     }
 
     @Override
@@ -87,7 +86,7 @@ public class Task implements Comparable<Task> {
         if (result != 0) {
             return result;
         }
-        if (this.startTimeOpt.isPresent()) {
+        if (this.startTime != null) {
             result = byStartTime().compare(this, task);
             if (result != 0) {
                 return result;
@@ -99,10 +98,10 @@ public class Task implements Comparable<Task> {
 
     private Comparator<Task> byStartTimeExistence() {
         return (t1, t2) -> {
-            if (t1.startTimeOpt.isPresent() && t2.startTimeOpt.isEmpty()) {
+            if (t1.startTime != null && t2.startTime == null) {
                 return -1;
             }
-            if (t1.startTimeOpt.isEmpty() && t2.startTimeOpt.isPresent()) {
+            if (t1.startTime == null && t2.startTime != null) {
                 return 1;
             }
             return 0;
@@ -110,15 +109,7 @@ public class Task implements Comparable<Task> {
     }
 
     private Comparator<Task> byStartTime() {
-        return (t1, t2) -> {
-            if (t1.startTimeOpt.get().isBefore(t2.startTimeOpt.get())) {
-                return -1;
-            }
-            if (t1.startTimeOpt.get().isAfter(t2.startTimeOpt.get())) {
-                return 1;
-            }
-            return 0;
-        };
+        return Comparator.comparing(t -> t.startTime);
     }
 
     private Comparator<Task> byCounter() {
@@ -126,19 +117,8 @@ public class Task implements Comparable<Task> {
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Task)) return false;
-        Task task = (Task) o;
-        return id == task.id && status == task.status
-                && Objects.equals(name, task.name) && Objects.equals(description, task.description)
-                && startTimeOpt.equals(task.startTimeOpt) && durationOpt.equals(task.durationOpt)
-                && endTimeOpt.equals(task.endTimeOpt);
-    }
-
-    @Override
     public int hashCode() {
-        return Objects.hash(id, status, name, description, startTimeOpt, durationOpt, endTimeOpt);
+        return Objects.hash(id, status, name, description);
     }
 
     @Override
@@ -148,9 +128,20 @@ public class Task implements Comparable<Task> {
                 ", name='" + name + '\'' +
                 ", status=" + status +
                 ", description='" + description + '\'' +
-                ", ^\bstartTimeOpt=" + startTimeOpt +
-                ", durationOpt=" + durationOpt +
-                ", endTimeOpt=" + endTimeOpt +
-                "}^\b";
+                ", " + System.lineSeparator() + "startTime=" + startTime +
+                ", duration=" + duration +
+                ", endTime=" + endTime +
+                "}" + System.lineSeparator() + "";
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Task)) return false;
+        Task task = (Task) o;
+        return id == task.id && name.equals(task.name)
+                && status == task.status && description.equals(task.description)
+                && Objects.equals(startTime, task.startTime) && Objects.equals(duration, task.duration)
+                && Objects.equals(endTime, task.endTime);
     }
 }

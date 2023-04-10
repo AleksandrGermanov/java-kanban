@@ -1,29 +1,26 @@
 package management.task;
 
-import management.history.InMemoryHistoryManager;
 import task.EpicTask;
 import task.Statuses;
 import task.SubTask;
 import task.Task;
 
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Random;
 
-public class ManualTestTaskManager extends FileBackedTaskManager {
+/***
+ *Принимает в конструктор менеджер типа М и работает с его методами и HashMap tasks.
+ * Сохранен в src для прямого доступа к методам и tasks принимаемого менеджера.
+ * Применяется в классе FileBackedTaskManagerTest.
+ */
+public class ManualTestTaskManager<M extends FileBackedTaskManager> extends FileBackedTaskManager {
     private static final Random random = new Random();
-    public InMemoryHistoryManager hm = new InMemoryHistoryManager();
+    M manager;
 
-    public ManualTestTaskManager(){
-    }
-    public ManualTestTaskManager(Path path){
-        super(path);
-    }
-
-    public <T extends Task> void createRandomTask(T task) {
-        task.setName(ManualTestTaskManager.randomTaskNameCreator());
-        task.setDescription("Нужно просто пойти и " + task.getName());
-        createTask(task);
+    public ManualTestTaskManager(M manager) {
+        super(manager.csvPath);
+        manager.tasks = this.tasks;
+        this.manager = manager;
     }
 
     static String randomTaskNameCreator() {
@@ -36,17 +33,6 @@ public class ManualTestTaskManager extends FileBackedTaskManager {
                 + ' ' + word3[random.nextInt(word3.length)]);
     }
 
-    public <T extends Task> T changeTask(int id) {
-        T task = getTaskNH(id);
-
-        task.setName("New name:" + randomTaskNameCreator());
-        task.setDescription("А у тебя точно получится?");
-        if (!defineTypeById(task.getId()).equals(TaskFamily.EPICTASK)) {
-            task.setStatus(randomStatus());
-        }
-        return task;
-    }
-
     static Statuses randomStatus() {
         return Statuses.values()[random.nextInt(Statuses.values().length)];
     }
@@ -55,10 +41,27 @@ public class ManualTestTaskManager extends FileBackedTaskManager {
         return random.nextInt(2) == 0;
     }
 
+    public <T extends Task> void createRandomTask(T task) {
+        task.setName(ManualTestTaskManager.randomTaskNameCreator());
+        task.setDescription("Нужно просто пойти и " + task.getName());
+        manager.createTask(task);
+    }
+
+    public <T extends Task> T changeTask(int id) {
+        T task = M.getTaskNH(id, manager.tasks);
+
+        task.setName("New name:" + randomTaskNameCreator());
+        task.setDescription("А у тебя точно получится?");
+        if (!manager.defineTypeById(task.getId()).equals(TaskFamily.EPICTASK)) {
+            task.setStatus(randomStatus());
+        }
+        return task;
+    }
+
     public int countAllTasks() {
         int sum = 0;
         for (TaskFamily TF : TaskFamily.values()) {
-            sum += tasks.get(TF).size();
+            sum += manager.tasks.get(TF).size();
         }
         return sum;
     }
@@ -70,14 +73,14 @@ public class ManualTestTaskManager extends FileBackedTaskManager {
         for (int i = 0; i < quantity; i++) {
             switch (TaskFamily.values()[random.nextInt(TaskFamily.values().length)]) {
                 case SUBTASK:
-                    if (!tasks.get(TaskFamily.EPICTASK).isEmpty()) {
+                    if (!manager.tasks.get(TaskFamily.EPICTASK).isEmpty()) {
                         int randomEpicId;
-                        int epicsSize = tasks.get(TaskFamily.EPICTASK).size();
-                        for (int id : tasks.get(TaskFamily.EPICTASK).keySet()) {
+                        int epicsSize = manager.tasks.get(TaskFamily.EPICTASK).size();
+                        for (int id : manager.tasks.get(TaskFamily.EPICTASK).keySet()) {
                             if (!epicsList.contains(id)) epicsList.add(id);
                         }
                         randomEpicId = epicsList.get(random.nextInt(epicsSize));
-                        createRandomTask(new SubTask(getTaskNH(randomEpicId)));
+                        createRandomTask(new SubTask(M.getTaskNH(randomEpicId, manager.tasks)));
                         ++count;
                         break;
                     }
@@ -101,7 +104,7 @@ public class ManualTestTaskManager extends FileBackedTaskManager {
         ArrayList<Integer> list = new ArrayList<>();
 
         for (TaskFamily TF : TaskFamily.values()) {
-            list.addAll(tasks.get(TF).keySet());
+            list.addAll(manager.tasks.get(TF).keySet());
         }
         return list;
     }
@@ -116,7 +119,7 @@ public class ManualTestTaskManager extends FileBackedTaskManager {
         }
         for (int i = 0; i < (countAllTasks() * percentage / 100); i++) {
             id = allKeys.get(random.nextInt(allKeys.size()));
-            renewTask(changeTask(id));
+            manager.renewTask(changeTask(id));
             allKeys.remove(id);
             ++count;
             if (allKeys.isEmpty()) {
@@ -141,7 +144,7 @@ public class ManualTestTaskManager extends FileBackedTaskManager {
         }
         while ((remaining > plannedRemaining) && !allKeys.isEmpty()) {
             id = allKeys.get(random.nextInt(allKeys.size()));
-            removeTask(id);
+            manager.removeTask(id);
             ++count;
             allKeys = getAllKeysList();
             remaining = countAllTasks();
@@ -160,11 +163,11 @@ public class ManualTestTaskManager extends FileBackedTaskManager {
         for (int i = 0; i < quantity; i++) {
             ArrayList<Integer> allKeys = getAllKeysList();
             int id = allKeys.get(random.nextInt(allKeys.size()));
-            getTask(id);
+            manager.getTask(id);
             idsString.append(id).append(", ");
         }
         System.out.println("Были вызваны следующие задачи для формирования истории:");
-        System.out.println(idsString+"\b\b");
+        System.out.println(idsString + "\b\b");
     }
 }
 

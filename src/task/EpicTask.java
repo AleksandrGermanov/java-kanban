@@ -10,7 +10,7 @@ import java.util.function.Predicate;
 
 
 public class EpicTask extends Task {
-    private Map<Integer, SubTask> mySubTaskMap;
+    private final Map<Integer, SubTask> mySubTaskMap;
 
     public EpicTask() {
         mySubTaskMap = new HashMap<>();
@@ -33,18 +33,18 @@ public class EpicTask extends Task {
     }
 
     @Override
-    public void setStartTimeOpt(Optional<LocalDateTime> startTimeOpt) {
-        setStartTimeOpt();
+    public void setStartTime(LocalDateTime startTime) {
+        setStartTime();
     }
 
     @Override
-    public void setDurationOpt(Optional<Integer> durationOpt) {
-        setDurationOpt();
+    public void setDuration(Integer duration) {
+        setDuration();
     }
 
     @Override
-    public void setEndTimeOpt(Optional<LocalDateTime> endTimeOpt) {
-        setEndTimeOpt();
+    public void setEndTime(LocalDateTime endTime) {
+        setEndTime();
     }
 
     public Map<Integer, SubTask> getMySubTaskMap() {
@@ -86,54 +86,41 @@ public class EpicTask extends Task {
     }
 
     public void removeMySubTaskMap() {
-        mySubTaskMap = null;
+        mySubTaskMap.clear();
     }
 
-    public void setTime(){
-        setStartTimeOpt();
-        setDurationOpt();
-        setEndTimeOpt();
+    public void setTime() {
+        setStartTime();
+        setDuration();
+        setEndTime();
     }
 
-    public void setStartTimeOpt() {
-            this.startTimeOpt = mySubTaskMap.values().stream()
-                    .filter(subTask -> subTask.getStartTimeOpt().isPresent())
-                    .map(subTask -> subTask.getStartTimeOpt().get())
-                    .reduce(BinaryOperator.minBy((start1, start2) -> {
-                        if (start1.isBefore(start2)) {
-                            return -1;
-                        } else if (start1.isAfter(start2)) {
-                            return 1;}
-                        else{
-                            return 0;
-                        }
-                    }));
-        }
+    public void setStartTime() {
+        this.startTime = mySubTaskMap.values().stream()
+                .map(Task::getStartTime)
+                .filter(Objects::nonNull)
+                .min(LocalDateTime::compareTo)
+                .orElse(null);
+    }
 
-    public void setDurationOpt() {
-        Predicate<SubTask> containsDuration = subTask -> subTask.getDurationOpt().isPresent();
-        Function<SubTask, Integer> getDuration = subTask -> subTask.getDurationOpt().get();
+    public void setDuration() {
+        Predicate<Integer> containsDuration = Objects::nonNull;
+        Function<SubTask, Integer> getDuration = SubTask::getDuration;
         BinaryOperator<Integer> add = Integer::sum;
 
-        this.durationOpt = mySubTaskMap.values().stream()
-                .filter(containsDuration)
+        this.duration = mySubTaskMap.values().stream()
                 .map(getDuration)
-                .reduce(add);
+                .filter(containsDuration)
+                .reduce(add)
+                .orElse(null);
     }
 
-    public void setEndTimeOpt(){
-        this.endTimeOpt = mySubTaskMap.values().stream()
-                .filter(subTask -> subTask.getEndTimeOpt().isPresent())
-                .map(subTask -> subTask.getEndTimeOpt().get())
-                .reduce(BinaryOperator.maxBy((end1, end2) -> {
-                    if (end1.isBefore(end2)) {
-                        return -1;
-                    } else if (end1.isAfter(end2)) {
-                        return 1;}
-                    else{
-                        return 0;
-                    }
-                }));
+    public void setEndTime() {
+        this.endTime = mySubTaskMap.values().stream()
+                .map(SubTask::getEndTime)
+                .filter(Objects::nonNull)
+                .max(LocalDateTime::compareTo)
+                .orElse(null);
     }
 
     @Override
@@ -157,11 +144,11 @@ public class EpicTask extends Task {
                 ", name='" + name + '\'' +
                 ", status=" + status +
                 ", description='" + description + '\'' +
-                ", ^\bstartTimeOpt=" + startTimeOpt +
-                ", durationOpt=" + durationOpt +
-                ", endTimeOpt=" + endTimeOpt +
-                ", ^\bmySubTaskMap.size=" + mySubTaskMap.size()
+                ", " + System.lineSeparator() + "startTime=" + startTime +
+                ", duration=" + duration +
+                ", endTime=" + endTime +
+                ", " + System.lineSeparator() + "mySubTaskMap.size=" + mySubTaskMap.size()
                 + ", mySubTaskMap.keySet=" + mySubTaskMap.keySet()
-                + "}^\b";
+                + "}" + System.lineSeparator() + "";
     }
 }

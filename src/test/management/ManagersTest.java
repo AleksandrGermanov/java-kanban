@@ -1,12 +1,13 @@
-package management;
+package test.management;
 
+import management.Managers;
 import management.history.InMemoryHistoryManager;
 import management.task.FileBackedTaskManager;
 import management.task.InMemoryTaskManager;
 import management.time.OneThreadTimeManager;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
 class ManagersTest {
 

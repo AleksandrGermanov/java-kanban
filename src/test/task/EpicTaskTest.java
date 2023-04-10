@@ -1,13 +1,15 @@
-package task;
+package test.task;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import task.EpicTask;
+import task.Statuses;
+import task.SubTask;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -34,7 +36,7 @@ class EpicTaskTest {
         epic.getMySubTaskMap().put(2, new SubTask(epic));
         epic.setStatus();
         assertEquals(Statuses.IN_PROGRESS, epic.getStatus());
-        for(SubTask sub : epic.getMySubTaskMap().values()){
+        for (SubTask sub : epic.getMySubTaskMap().values()) {
             sub.setStatus(Statuses.IN_PROGRESS);
         }
         epic.setStatus();
@@ -46,33 +48,33 @@ class EpicTaskTest {
     }
 
     @Test
-    void setStartTimeOpt() {
+    void setStartTime() {
         LocalDateTime testLDT = LocalDateTime.now();
-        epic.setStartTimeOpt(Optional.of(testLDT));
-        assertTrue(epic.getStartTimeOpt().isEmpty());
-        sub.setStartTimeOpt(Optional.of(testLDT));
-        epic.setStartTimeOpt();
-        assertEquals(testLDT, epic.getStartTimeOpt().get());
+        epic.setStartTime(testLDT);
+        assertNull(epic.getStartTime());
+        sub.setStartTime(testLDT);
+        epic.setStartTime();
+        assertEquals(testLDT, epic.getStartTime());
     }
 
     @Test
-    void setDurationOpt() {
+    void setDuration() {
         Integer testDuration = 10;
-        epic.setDurationOpt(Optional.of(15));
-        assertTrue(epic.getDurationOpt().isEmpty());
-        sub.setDurationOpt(Optional.of(testDuration));
-        epic.setDurationOpt();
-        assertEquals(testDuration, epic.getDurationOpt().get());
+        epic.setDuration(15);
+        assertNull(epic.getDuration());
+        sub.setDuration(testDuration);
+        epic.setDuration();
+        assertEquals(testDuration, epic.getDuration());
     }
 
     @Test
-    void setEndTimeOpt() {
+    void setEndTime() {
         LocalDateTime testLDT = LocalDateTime.now();
-        epic.setEndTimeOpt(Optional.of(testLDT));
-        assertTrue(epic.getEndTimeOpt().isEmpty());
-        sub.setEndTimeOpt(Optional.of(testLDT));
-        epic.setEndTimeOpt();
-        assertEquals(testLDT, epic.getEndTimeOpt().get());
+        epic.setEndTime(testLDT);
+        assertNull(epic.getEndTime());
+        sub.setEndTime(testLDT);
+        epic.setEndTime();
+        assertEquals(testLDT, epic.getEndTime());
     }
 
     @Test
@@ -107,20 +109,19 @@ class EpicTaskTest {
     void setTime() {
         LocalDateTime start = LocalDateTime.now();
         LocalDateTime start2 = start.plusMinutes(15);
-        sub.setStartTimeOpt(Optional.of(start));
-        sub.setDurationOpt(Optional.of(10));
-        sub.setEndTimeOpt(Optional.of(sub.getStartTimeOpt().get()
-                .plusMinutes(sub.getDurationOpt().get())));
+        sub.setStartTime(start);
+        sub.setDuration(10);
+        sub.setEndTime(sub.getStartTime().plusMinutes(sub.getDuration()));
         SubTask sub2 = new SubTask(epic);
         sub2.setId(2);
         epic.getMySubTaskMap().put(sub2.getId(), sub2);
-        sub2.setStartTimeOpt(Optional.of(start2));
-        sub2.setDurationOpt(Optional.of(10));
+        sub2.setStartTime(start2);
+        sub2.setDuration(10);
         LocalDateTime endTime = start2.plusMinutes(10);
-        sub2.setEndTimeOpt(Optional.of(endTime));
+        sub2.setEndTime(endTime);
         epic.setTime();
-        assertEquals(start, epic.getStartTimeOpt().get());
-        assertEquals(20, epic.getDurationOpt().get());
-        assertEquals(endTime, epic.getEndTimeOpt().get());
+        assertEquals(start, epic.getStartTime());
+        assertEquals(20, epic.getDuration());
+        assertEquals(endTime, epic.getEndTime());
     }
 }
