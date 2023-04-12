@@ -93,7 +93,7 @@ public class Task implements Comparable<Task> {
             }
         }
         return byCounter().compare(this, task);// задачам, созданным позже, будет присвоено большее
-        // значение счетчика. Эпик всегда создается раньше подзадачи.
+        // значение счетчика.
     }
 
     private Comparator<Task> byStartTimeExistence() {

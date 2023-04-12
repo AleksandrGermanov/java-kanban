@@ -1,6 +1,7 @@
 package management.task;
 
 import management.history.HistoryManager;
+import management.time.TimeManager;
 import myExceptions.ManagerSaveException;
 import myExceptions.NoMatchesFoundException;
 import task.EpicTask;
@@ -27,18 +28,42 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
 
     protected final Path csvPath;
 
+    public Path getCsvPath() {
+        return csvPath;
+    }
+
     public FileBackedTaskManager() {
         csvPath = Paths.get(System.getProperty("user.dir"), "data.csv");
+        loadFromFile(csvPath, tasks, histMan, this);
     }
 
     public FileBackedTaskManager(Path csvPath) {
         this.csvPath = csvPath;
-        loadFromFile(csvPath, tasks);
+        loadFromFile(csvPath, tasks, histMan, this);
+    }
+
+    public FileBackedTaskManager(Path csvPath, HistoryManager histMan, TimeManager timeMan){
+        super(histMan, timeMan);
+        this.csvPath = csvPath;
+        loadFromFile(csvPath, tasks, histMan, this);
     }
 
     /***
      */
     public static void main(String[] args) {
+        FileBackedTaskManager taskMan = new FileBackedTaskManager();
+        taskMan.createTask(new Task("task", "task_description"));
+        EpicTask epic = new EpicTask("epic", "has 2 subs");
+        taskMan.createTask(epic);
+        SubTask subWithTime = new SubTask(epic, "sub with time", "epic's 1st");
+        subWithTime.setStartTime(LocalDateTime.now());
+        subWithTime.setDuration(15);
+        subWithTime.setEndTime(subWithTime.getStartTime().plusMinutes(subWithTime.getDuration()));
+        epic.setTime();
+        taskMan.createTask(subWithTime);
+        taskMan.createTask(new SubTask(epic, "sub 2", "epic's 2nd"));
+        taskMan.createTask(new Task());
+        taskMan.getTask(300002);
     }
 
     private static <T extends Task> String taskToString(T task) { //в тз String toString(Task task)
@@ -149,7 +174,8 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
     }
 
     private static void idListToHistory(List<Integer> idList,
-                                        HashMap<TaskFamily, HashMap<Integer, ? super Task>> tasks) {
+                                        HashMap<TaskFamily, HashMap<Integer, ? super Task>> tasks,
+                                        HistoryManager histMan) {
         if (!idList.isEmpty()) {
             for (int id : idList) {
                 histMan.add(getTaskNH(id, tasks));
@@ -157,7 +183,8 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         }
     }
 
-    private static void loadFromFile(Path csvPath, HashMap<TaskFamily, HashMap<Integer, ? super Task>> tasks) {
+    private static void loadFromFile(Path csvPath, HashMap<TaskFamily, HashMap<Integer, ? super Task>> tasks,
+                                     HistoryManager histMan, InMemoryTaskManager tm) {
         try {
             if (!Files.exists(csvPath)) {
                 Files.createFile(csvPath);
@@ -181,8 +208,8 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
                 for (String data : subTaskStrings) {
                     restoreTaskToMap(fromString(data, tasks), tasks);
                 }
-                idListToHistory(historyFromString(file.get(file.size() - 1)), tasks);
-                idCounter = getIdCounterStateFromFile(file.get(file.size() - 3));
+                idListToHistory(historyFromString(file.get(file.size() - 1)), tasks, histMan);
+                tm.idCounter = getIdCounterStateFromFile(file.get(file.size() - 3));
             }
         } catch (IOException e) {
             throw new ManagerSaveException(e);

@@ -13,9 +13,9 @@ import java.util.*;
 
 public class InMemoryTaskManager implements TaskManager {
 
-    protected static HistoryManager histMan;
-    protected static TimeManager timeMan;
-    protected static int idCounter = 0;
+    protected HistoryManager histMan;
+    protected TimeManager timeMan;
+    protected int idCounter = 0;
     protected HashMap<TaskFamily, HashMap<Integer, ? super Task>> tasks;
 
     /***
@@ -26,6 +26,28 @@ public class InMemoryTaskManager implements TaskManager {
         initializeTasksMap();
         histMan = Managers.getDefaultHistory();
         timeMan = Managers.getDefaultTime();
+    }
+
+    public InMemoryTaskManager(HistoryManager histMan, TimeManager timeMan){
+        initializeTasksMap();
+        this.histMan = histMan;
+        this.timeMan = timeMan;
+    }
+
+    public HistoryManager getHistMan() {
+        return histMan;
+    }
+
+    public TimeManager getTimeMan() {
+        return timeMan;
+    }
+
+    public HashMap<TaskFamily, HashMap<Integer, ? super Task>> getTasks() {
+        return tasks;
+    }
+
+    public void setTasks(HashMap<TaskFamily, HashMap<Integer, ? super Task>> tasks) {
+        this.tasks = tasks;
     }
 
     protected static <T extends Task> T getTaskNH(int id, HashMap<TaskFamily,
@@ -118,7 +140,9 @@ public class InMemoryTaskManager implements TaskManager {
         }
         task.setId(generateId(task));
         putTaskToMap(task, tasks);
-        timeMan.addToRanged(task);
+        if(!(task instanceof EpicTask)){
+            timeMan.addToValidation(task);
+        }
     }
 
     public <T extends Task> void createTask(String startDateTime, int durationInMin, T task) {
@@ -156,7 +180,6 @@ public class InMemoryTaskManager implements TaskManager {
                         EpicTask epic = (EpicTask) task;
                         for (SubTask mySub : epic.getMySubTaskMap().values()) {
                             histMan.remove(mySub.getId());
-                            timeMan.removeFromRanged(task);
                             timeMan.removeFromValidation(task);
                             tasks.get(TaskFamily.getEnumFromClass(mySub.getClass())).remove(mySub.getId());
                             mySub.removeMyEpicLink();// это для GC
@@ -165,7 +188,6 @@ public class InMemoryTaskManager implements TaskManager {
                         break;
                 }
                 histMan.remove(id);
-                timeMan.removeFromRanged(task);
                 timeMan.removeFromValidation(task);
                 tasks.get(TaskFamily.getEnumFromClass(task.getClass())).remove(id);
             }

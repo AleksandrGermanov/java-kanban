@@ -1,6 +1,7 @@
 package test.management.task;
 
 import management.Managers;
+import management.history.HistoryManager;
 import management.task.InMemoryTaskManager;
 import management.time.TimeManager;
 import org.junit.jupiter.api.BeforeEach;
@@ -11,6 +12,7 @@ import task.Task;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -18,7 +20,22 @@ class InMemoryTaskManagerTest extends TaskManagerTest<InMemoryTaskManager> {
 
     @BeforeEach
     void createTaskMan() {
-        super.taskMan = new InMemoryTaskManager();
+        taskMan = new InMemoryTaskManager();
+    }
+
+    @Test
+    void getTasks(){
+        assertInstanceOf(HashMap.class, taskMan.getTasks());
+        assertEquals(3, taskMan.getTasks().size());
+    }
+
+    @Test
+    void getHistMan(){
+        assertInstanceOf(HistoryManager.class, taskMan.getHistMan());
+    }
+
+    void getTimeMan(){
+        assertInstanceOf(TimeManager.class, taskMan.getTimeMan());
     }
 
     @Test

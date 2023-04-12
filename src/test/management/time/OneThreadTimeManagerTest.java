@@ -61,17 +61,15 @@ class OneThreadTimeManagerTest {
         sub1.getMyEpic().getMySubTaskMap().put(sub1.getId(), sub1);
         sub1.getMyEpic().getMySubTaskMap().put(sub2.getId(), sub1);
         tm.setTime("01.01.1991 00:00", 10, sub1);
-        tm.setTime("01.01.1991 00:01", 15, task);
-        tm.setTime("31.12.1990 23:01", 65, task);
+        tm.setTime("01.01.1991 00:10", 15, task);
+        tm.setTime("31.12.1990 23:01", 45, task);
         epic.setTime();
-        tm.addToRanged(sub2);
-        tm.addToRanged(task);
-        tm.addToRanged(epic);
-        tm.addToRanged(sub1);
+        tm.addToValidation(sub2);
+        tm.addToValidation(task);
+        tm.addToValidation(sub1);
         ArrayList<Task> manuallyAranged = new ArrayList<>();
-        manuallyAranged.add(epic);
-        manuallyAranged.add(sub1);
         manuallyAranged.add(task);
+        manuallyAranged.add(sub1);
         manuallyAranged.add(sub2);
         assertEquals(manuallyAranged, tm.getPrioritizedTasks());
     }
@@ -89,23 +87,19 @@ class OneThreadTimeManagerTest {
     }
 
     @Test
-    void addToRanged() {
+    void addToValidation() {
         assertEquals(0, tm.getPrioritizedTasks().size());
-        tm.addToRanged(epic);
+        tm.addToValidation(epic);
         assertEquals(1, tm.getPrioritizedTasks().size());
-    }
-
-    @Test
-    void removeFromRanged() {
-        assertEquals(0, tm.getPrioritizedTasks().size());
-        tm.addToRanged(epic);
-        assertEquals(1, tm.getPrioritizedTasks().size());
-        tm.removeFromRanged(epic);
-        assertEquals(0, tm.getPrioritizedTasks().size());
     }
 
     @Test
     void removeFromValidation() {
+        assertEquals(0, tm.getPrioritizedTasks().size());
+        tm.addToValidation(epic);
+        assertEquals(1, tm.getPrioritizedTasks().size());
+        tm.removeFromValidation(epic);
+        assertEquals(0, tm.getPrioritizedTasks().size());
         tm.setTime("01.01.1991 00:00", 10, sub1);
         tm.setTime("01.01.1991 00:01", 15, task);
         tm.removeFromValidation(sub1);
@@ -115,7 +109,7 @@ class OneThreadTimeManagerTest {
 
     @Test
     void clear() {
-        tm.addToRanged(task);
+        tm.addToValidation(task);
         assertFalse(tm.getPrioritizedTasks().isEmpty());
         tm.setTime("01.01.1991 00:00", 10, sub1);
         tm.setTime("01.01.1991 00:00", 10, sub2);

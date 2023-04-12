@@ -1,5 +1,7 @@
-package management.task;
+package test.management.task;
 
+import management.task.FileBackedTaskManager;
+import management.task.TaskFamily;
 import task.EpicTask;
 import task.Statuses;
 import task.SubTask;
@@ -10,7 +12,6 @@ import java.util.Random;
 
 /***
  *Принимает в конструктор менеджер типа М и работает с его методами и HashMap tasks.
- * Сохранен в src для прямого доступа к методам и tasks принимаемого менеджера.
  * Применяется в классе FileBackedTaskManagerTest.
  */
 public class ManualTestTaskManager<M extends FileBackedTaskManager> extends FileBackedTaskManager {
@@ -18,8 +19,8 @@ public class ManualTestTaskManager<M extends FileBackedTaskManager> extends File
     M manager;
 
     public ManualTestTaskManager(M manager) {
-        super(manager.csvPath);
-        manager.tasks = this.tasks;
+        super(manager.getCsvPath(), manager.getHistMan(),manager.getTimeMan());
+        manager.setTasks(tasks);
         this.manager = manager;
     }
 
@@ -48,11 +49,11 @@ public class ManualTestTaskManager<M extends FileBackedTaskManager> extends File
     }
 
     public <T extends Task> T changeTask(int id) {
-        T task = M.getTaskNH(id, manager.tasks);
+        T task = M.getTaskNH(id, manager.getTasks());
 
         task.setName("New name:" + randomTaskNameCreator());
         task.setDescription("А у тебя точно получится?");
-        if (!manager.defineTypeById(task.getId()).equals(TaskFamily.EPICTASK)) {
+        if (!M.defineTypeById(task.getId()).equals(TaskFamily.EPICTASK)) {
             task.setStatus(randomStatus());
         }
         return task;
@@ -61,7 +62,7 @@ public class ManualTestTaskManager<M extends FileBackedTaskManager> extends File
     public int countAllTasks() {
         int sum = 0;
         for (TaskFamily TF : TaskFamily.values()) {
-            sum += manager.tasks.get(TF).size();
+            sum += manager.getTasks().get(TF).size();
         }
         return sum;
     }
@@ -73,14 +74,14 @@ public class ManualTestTaskManager<M extends FileBackedTaskManager> extends File
         for (int i = 0; i < quantity; i++) {
             switch (TaskFamily.values()[random.nextInt(TaskFamily.values().length)]) {
                 case SUBTASK:
-                    if (!manager.tasks.get(TaskFamily.EPICTASK).isEmpty()) {
+                    if (!manager.getTasks().get(TaskFamily.EPICTASK).isEmpty()) {
                         int randomEpicId;
-                        int epicsSize = manager.tasks.get(TaskFamily.EPICTASK).size();
-                        for (int id : manager.tasks.get(TaskFamily.EPICTASK).keySet()) {
+                        int epicsSize = manager.getTasks().get(TaskFamily.EPICTASK).size();
+                        for (int id : manager.getTasks().get(TaskFamily.EPICTASK).keySet()) {
                             if (!epicsList.contains(id)) epicsList.add(id);
                         }
                         randomEpicId = epicsList.get(random.nextInt(epicsSize));
-                        createRandomTask(new SubTask(M.getTaskNH(randomEpicId, manager.tasks)));
+                        createRandomTask(new SubTask(M.getTaskNH(randomEpicId, manager.getTasks())));
                         ++count;
                         break;
                     }
@@ -104,7 +105,7 @@ public class ManualTestTaskManager<M extends FileBackedTaskManager> extends File
         ArrayList<Integer> list = new ArrayList<>();
 
         for (TaskFamily TF : TaskFamily.values()) {
-            list.addAll(manager.tasks.get(TF).keySet());
+            list.addAll(manager.getTasks().get(TF).keySet());
         }
         return list;
     }

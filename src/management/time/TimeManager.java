@@ -11,9 +11,7 @@ public interface TimeManager {
 
     boolean isTimeSet(Task task);
 
-    void addToRanged(Task task);
-
-    void removeFromRanged(Task task);
+    void addToValidation(Task task);
 
     void removeFromValidation(Task task);
 

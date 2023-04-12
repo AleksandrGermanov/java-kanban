@@ -12,22 +12,12 @@ import java.util.*;
 /***
  * Отсортируйте все задачи по приоритету — то есть по startTime. Если дата старта не задана,
  * добавьте задачу в конец списка задач, подзадач, отсортированных по startTime.
- * Напишите новый метод getPrioritizedTasks, возвращающий список задач и подзадач в заданном порядке.
- * Предполагается, что пользователь будет часто запрашивать этот список задач и подзадач,
- * поэтому подберите подходящую структуру данных для хранения.
- * Сложность получения должна быть уменьшена с O(n log n) до O(n).
- *
- * rangedSet хранит ВСЕ созданные задачи, вне зависимости от типа и наличия установленного времени выполнения.
- *
- * validationSet хранит только задачи Task и SubTask с заданным временем выполнения. Это сделано
- * для того, чтобы избежать пересечения времени эпиков с их подзадачами, а также для обработки ситуаций,
- * когда между двумя подзадачами одного эпика пользователь вносит обычную задачу или подзадачу другого
- * эпика (если нет пересечения по времени, такие ситуации разрешены).
  */
 public class OneThreadTimeManager implements TimeManager {
     public static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
-    private final Set<Task> rangedSet = new TreeSet<>();
-    private final Set<Task> validationSet = new TreeSet<>();
+
+    private final Set<Task> validationSet = new TreeSet<>(Task::compareTo);//компаратор
+    //я добавил, однако класс Task имплементирует Comparable и эта запись необязательна
 
     @Override
     public <T extends Task> void setTime(String startString, Integer duration, T task) {
@@ -57,7 +47,7 @@ public class OneThreadTimeManager implements TimeManager {
 
     @Override
     public List<Task> getPrioritizedTasks() {
-        return new ArrayList<>(rangedSet);
+        return new ArrayList<>(validationSet);
     }
 
     @Override
@@ -68,13 +58,8 @@ public class OneThreadTimeManager implements TimeManager {
     }
 
     @Override
-    public void addToRanged(Task task) {
-        rangedSet.add(task);
-    }
-
-    @Override
-    public void removeFromRanged(Task task) {
-        rangedSet.remove(task);
+    public void addToValidation(Task task){
+        validationSet.add(task);
     }
 
     @Override
@@ -84,7 +69,6 @@ public class OneThreadTimeManager implements TimeManager {
 
     @Override
     public void clear() {
-        rangedSet.clear();
         validationSet.clear();
     }
 
