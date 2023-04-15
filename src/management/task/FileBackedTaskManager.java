@@ -3,7 +3,6 @@ package management.task;
 import management.history.HistoryManager;
 import management.time.TimeManager;
 import myExceptions.ManagerSaveException;
-import myExceptions.NoMatchesFoundException;
 import task.EpicTask;
 import task.Statuses;
 import task.SubTask;
@@ -28,10 +27,6 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
 
     protected final Path csvPath;
 
-    public Path getCsvPath() {
-        return csvPath;
-    }
-
     public FileBackedTaskManager() {
         csvPath = Paths.get(System.getProperty("user.dir"), "data.csv");
         loadFromFile(csvPath, tasks, histMan, this);
@@ -42,7 +37,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         loadFromFile(csvPath, tasks, histMan, this);
     }
 
-    public FileBackedTaskManager(Path csvPath, HistoryManager histMan, TimeManager timeMan){
+    public FileBackedTaskManager(Path csvPath, HistoryManager histMan, TimeManager timeMan) {
         super(histMan, timeMan);
         this.csvPath = csvPath;
         loadFromFile(csvPath, tasks, histMan, this);
@@ -50,21 +45,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
 
     /***
      */
-    public static void main(String[] args) {
-        FileBackedTaskManager taskMan = new FileBackedTaskManager();
-        taskMan.createTask(new Task("task", "task_description"));
-        EpicTask epic = new EpicTask("epic", "has 2 subs");
-        taskMan.createTask(epic);
-        SubTask subWithTime = new SubTask(epic, "sub with time", "epic's 1st");
-        subWithTime.setStartTime(LocalDateTime.now());
-        subWithTime.setDuration(15);
-        subWithTime.setEndTime(subWithTime.getStartTime().plusMinutes(subWithTime.getDuration()));
-        epic.setTime();
-        taskMan.createTask(subWithTime);
-        taskMan.createTask(new SubTask(epic, "sub 2", "epic's 2nd"));
-        taskMan.createTask(new Task());
-        taskMan.getTask(300002);
-    }
+
 
     private static <T extends Task> String taskToString(T task) { //в тз String toString(Task task)
         String data = null;
@@ -75,22 +56,17 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         String endTime = task.getEndTime() == null
                 ? "null" : task.getEndTime().format(DATE_TIME_FORMATTER);
 
-        try {
-            data = task.getId() + "," + defineTypeById(task.getId())
-                    + "," + task.getName().replace(',', '¶')//Если пользователь ввел в имени
-                    //или описании задачи запятую, без замены символа обратная сборка поломается,
-                    //т.к. сплит неправильно поделит поля.
-                    + "," + task.getStatus()
-                    + "," + task.getDescription().replace(',', '¶')
-                    + "," + startTime + "," + duration + "," + endTime;
-            if (TaskFamily.getEnumFromClass(task.getClass()).equals(TaskFamily.SUBTASK)) {
-                SubTask sub = (SubTask) task;
-                data += "," + sub.getMyEpicId();
-            }
-        } catch (NoMatchesFoundException e) {
-            e.printStackTrace();
+        data = task.getId() + "," + defineTypeById(task.getId())
+                + "," + task.getName().replace(',', '¶')//Если пользователь ввел в имени
+                //или описании задачи запятую, без замены символа обратная сборка поломается,
+                //т.к. сплит неправильно поделит поля.
+                + "," + task.getStatus()
+                + "," + task.getDescription().replace(',', '¶')
+                + "," + startTime + "," + duration + "," + endTime;
+        if (TaskFamily.getEnumFromClass(task.getClass()).equals(TaskFamily.SUBTASK)) {
+            SubTask sub = (SubTask) task;
+            data += "," + sub.getMyEpicId();
         }
-
         return data;
     }
 
@@ -218,6 +194,10 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
 
     private static int getIdCounterStateFromFile(String state) {
         return Integer.parseInt(state);
+    }
+
+    public Path getCsvPath() {
+        return csvPath;
     }
 
     @Override

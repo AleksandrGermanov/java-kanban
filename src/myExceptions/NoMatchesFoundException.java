@@ -1,6 +1,6 @@
 package myExceptions;
 
-public class NoMatchesFoundException extends Exception {
+public class NoMatchesFoundException extends RuntimeException {
 
     public NoMatchesFoundException() {
     }

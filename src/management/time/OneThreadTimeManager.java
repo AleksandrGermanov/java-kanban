@@ -1,7 +1,6 @@
 package management.time;
 
 import management.task.TaskFamily;
-import myExceptions.NoMatchesFoundException;
 import task.SubTask;
 import task.Task;
 
@@ -16,32 +15,27 @@ import java.util.*;
 public class OneThreadTimeManager implements TimeManager {
     public static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
 
-    private final Set<Task> validationSet = new TreeSet<>(Task::compareTo);//компаратор
-    //я добавил, однако класс Task имплементирует Comparable и эта запись необязательна
+    private final Set<Task> validationSet = new TreeSet<>();
 
     @Override
     public <T extends Task> void setTime(String startString, Integer duration, T task) {
-        try {
-            TaskFamily TF = TaskFamily.getEnumFromClass(task.getClass());
-            LocalDateTime start = LocalDateTime.parse(startString, DATE_TIME_FORMATTER);
-            switch (TF) {
-                case TASK:
-                    setTimeValidated(start, duration, task);
-                    if (isTimeSet(task)) {
-                        validationSet.add(task);
-                    }
-                    break;
-                case SUBTASK:
-                    setTimeValidated(start, duration, task);
-                    if (isTimeSet(task)) {
-                        validationSet.add(task);
-                    }
-                    SubTask sub = (SubTask) task;
-                    sub.getMyEpic().setTime();
-                    break;
-            }
-        } catch (NoMatchesFoundException e) {
-            e.printStackTrace();
+        TaskFamily TF = TaskFamily.getEnumFromClass(task.getClass());
+        LocalDateTime start = LocalDateTime.parse(startString, DATE_TIME_FORMATTER);
+        switch (TF) {
+            case TASK:
+                setTimeValidated(start, duration, task);
+                if (isTimeSet(task)) {
+                    validationSet.add(task);
+                }
+                break;
+            case SUBTASK:
+                setTimeValidated(start, duration, task);
+                if (isTimeSet(task)) {
+                    validationSet.add(task);
+                }
+                SubTask sub = (SubTask) task;
+                sub.getMyEpic().setTime();
+                break;
         }
     }
 
@@ -58,7 +52,7 @@ public class OneThreadTimeManager implements TimeManager {
     }
 
     @Override
-    public void addToValidation(Task task){
+    public void addToValidation(Task task) {
         validationSet.add(task);
     }
 

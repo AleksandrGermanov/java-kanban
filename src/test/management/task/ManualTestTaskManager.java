@@ -19,7 +19,7 @@ public class ManualTestTaskManager<M extends FileBackedTaskManager> extends File
     M manager;
 
     public ManualTestTaskManager(M manager) {
-        super(manager.getCsvPath(), manager.getHistMan(),manager.getTimeMan());
+        super(manager.getCsvPath(), manager.getHistMan(), manager.getTimeMan());
         manager.setTasks(tasks);
         this.manager = manager;
     }

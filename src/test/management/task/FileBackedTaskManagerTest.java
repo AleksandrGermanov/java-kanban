@@ -105,7 +105,7 @@ class FileBackedTaskManagerTest extends TaskManagerTest<FileBackedTaskManager> {
             taskMan.removeAllTasks();
             Files.writeString(manualData, "id,type,name,status,description,start,duration,end,epic\n"
                     + "idCounter\n"
-                    + 0 +"\n"
+                    + 0 + "\n"
                     + "History first-to-last\n"
                     + "No history\n", StandardCharsets.UTF_8);
             assertEquals(Files.readAllLines(testPath), Files.readAllLines(manualData));

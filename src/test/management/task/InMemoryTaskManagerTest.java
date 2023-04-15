@@ -24,17 +24,17 @@ class InMemoryTaskManagerTest extends TaskManagerTest<InMemoryTaskManager> {
     }
 
     @Test
-    void getTasks(){
+    void getTasks() {
         assertInstanceOf(HashMap.class, taskMan.getTasks());
         assertEquals(3, taskMan.getTasks().size());
     }
 
     @Test
-    void getHistMan(){
+    void getHistMan() {
         assertInstanceOf(HistoryManager.class, taskMan.getHistMan());
     }
 
-    void getTimeMan(){
+    void getTimeMan() {
         assertInstanceOf(TimeManager.class, taskMan.getTimeMan());
     }
 

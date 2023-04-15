@@ -15,12 +15,9 @@ class TaskFamilyTest {
 
     @Test
     void getEnumFromClass() {
-        try {
-            Assertions.assertEquals(TaskFamily.TASK, TaskFamily.getEnumFromClass(Task.class));
-            assertEquals(TaskFamily.SUBTASK, TaskFamily.getEnumFromClass(SubTask.class));
-            assertEquals(TaskFamily.EPICTASK, TaskFamily.getEnumFromClass(EpicTask.class));
-            assertThrows(NoMatchesFoundException.class, () -> TaskFamily.getEnumFromClass(TaskFamily.class));
-        } catch (NoMatchesFoundException e) {
-        }
+        Assertions.assertEquals(TaskFamily.TASK, TaskFamily.getEnumFromClass(Task.class));
+        assertEquals(TaskFamily.SUBTASK, TaskFamily.getEnumFromClass(SubTask.class));
+        assertEquals(TaskFamily.EPICTASK, TaskFamily.getEnumFromClass(EpicTask.class));
+        assertThrows(NoMatchesFoundException.class, () -> TaskFamily.getEnumFromClass(TaskFamily.class));
     }
 }
