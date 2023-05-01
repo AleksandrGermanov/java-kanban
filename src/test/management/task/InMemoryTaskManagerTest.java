@@ -34,6 +34,7 @@ class InMemoryTaskManagerTest extends TaskManagerTest<InMemoryTaskManager> {
         assertInstanceOf(HistoryManager.class, taskMan.getHistMan());
     }
 
+    @Test
     void getTimeMan() {
         assertInstanceOf(TimeManager.class, taskMan.getTimeMan());
     }

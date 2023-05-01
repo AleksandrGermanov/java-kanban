@@ -7,6 +7,7 @@ import task.Task;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /***
  * Отсортируйте все задачи по приоритету — то есть по startTime. Если дата старта не задана,
@@ -102,7 +103,7 @@ public class OneThreadTimeManager implements TimeManager {
     }
 
     private boolean isValidatedByTime(Task task) {
-        List<Task> list = new ArrayList<>(validationSet);
+        List<Task> list = validationSet.stream().filter(this::isTimeSet).collect(Collectors.toList());
         int binSearch = Collections.binarySearch(list, task);
         if (binSearch >= 0) {
             return false;

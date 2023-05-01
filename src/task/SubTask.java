@@ -1,5 +1,6 @@
 package task;
 
+import java.time.LocalDateTime;
 import java.util.Objects;
 
 public class SubTask extends Task {
@@ -14,6 +15,12 @@ public class SubTask extends Task {
     public SubTask(EpicTask epic, String name, String description) {
         super(name, description);
         myEpic = epic;
+    }
+
+    public SubTask(int id, String name, Statuses status, String description,
+                   LocalDateTime startTime, Integer duration, LocalDateTime endTime, EpicTask myEpic) {
+        super(id, name, status, description, startTime, duration, endTime);
+        this.myEpic = myEpic;
     }
 
     public EpicTask getMyEpic() {

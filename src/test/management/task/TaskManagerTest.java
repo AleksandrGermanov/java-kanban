@@ -2,6 +2,7 @@ package test.management.task;
 
 import management.task.TaskFamily;
 import management.task.TaskManager;
+import myExceptions.NoMatchesFoundException;
 import org.junit.jupiter.api.Test;
 import task.EpicTask;
 import task.SubTask;
@@ -100,7 +101,7 @@ abstract class TaskManagerTest<T extends TaskManager> {
         int id = task.getId();
         assertEquals(task, taskMan.getTask(id));
         taskMan.removeTask(id);
-        assertThrows(NullPointerException.class, () -> taskMan.getTask(id));
+        assertThrows(NoMatchesFoundException.class, () -> taskMan.getTask(id));
     }
 
     @Test

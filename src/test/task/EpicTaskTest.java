@@ -1,5 +1,6 @@
 package test.task;
 
+import myExceptions.IllegalStatusChangeException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import task.EpicTask;
@@ -8,6 +9,7 @@ import task.SubTask;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -102,7 +104,7 @@ class EpicTaskTest {
     void removeMySubTaskMap() {
         assertNotNull(epic.getMySubTaskMap());
         epic.removeMySubTaskMap();
-        assertNull(epic.getMySubTaskMap());
+        assertEquals(epic.getMySubTaskMap(), Collections.emptyMap());
     }
 
     @Test

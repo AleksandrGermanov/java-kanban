@@ -2,7 +2,7 @@ package management.task;
 
 import management.history.HistoryManager;
 import management.time.TimeManager;
-import myExceptions.ManagerSaveException;
+import myExceptions.ManagerIOException;
 import task.EpicTask;
 import task.Statuses;
 import task.SubTask;
@@ -29,7 +29,6 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
 
     public FileBackedTaskManager() {
         csvPath = Paths.get(System.getProperty("user.dir"), "data.csv");
-        loadFromFile(csvPath, tasks, histMan, this);
     }
 
     public FileBackedTaskManager(Path csvPath) {
@@ -41,159 +40,6 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         super(histMan, timeMan);
         this.csvPath = csvPath;
         loadFromFile(csvPath, tasks, histMan, this);
-    }
-
-    /***
-     */
-
-
-    private static <T extends Task> String taskToString(T task) { //в тз String toString(Task task)
-        String data = null;
-        String startTime = task.getStartTime() == null
-                ? "null" : task.getStartTime().format(DATE_TIME_FORMATTER);
-        String duration = task.getStartTime() == null
-                ? "null" : task.getDuration().toString();
-        String endTime = task.getEndTime() == null
-                ? "null" : task.getEndTime().format(DATE_TIME_FORMATTER);
-
-        data = task.getId() + "," + defineTypeById(task.getId())
-                + "," + task.getName().replace(',', '¶')//Если пользователь ввел в имени
-                //или описании задачи запятую, без замены символа обратная сборка поломается,
-                //т.к. сплит неправильно поделит поля.
-                + "," + task.getStatus()
-                + "," + task.getDescription().replace(',', '¶')
-                + "," + startTime + "," + duration + "," + endTime;
-        if (TaskFamily.getEnumFromClass(task.getClass()).equals(TaskFamily.SUBTASK)) {
-            SubTask sub = (SubTask) task;
-            data += "," + sub.getMyEpicId();
-        }
-        return data;
-    }
-
-    private static String historyToString(HistoryManager histMan) {
-        StringBuilder history = new StringBuilder();
-        for (Task task : histMan.getHistory()) {
-            history.append(task.getId()).append(",");
-        }
-        if (history.length() > 0) {
-            history.delete(history.length() - 1, history.length());
-        } else {
-            history.append("No history");
-        }
-        return history.toString();
-    }
-
-    private static Task fromString(String data, HashMap<TaskFamily, HashMap<Integer, ? super Task>> tasks) {
-        Task value = null;
-        String[] fields = data.split(",");
-
-        for (int i = 0; i < fields.length; i++) {
-            fields[i] = fields[i].replace('¶', ',');
-        }
-        //id,type,name,status,description,start,duration,end,epic
-        TaskFamily TF = TaskFamily.valueOf(fields[1]);
-        switch (TF) {
-            case TASK:
-                Task task = new Task(fields[2], fields[4]);
-                task.setId(Integer.parseInt(fields[0]));
-                task.setStatus(Statuses.valueOf(fields[3]));
-                setTimeFromString(task, fields[5], fields[6], fields[7]);
-                value = task;
-                break;
-            case EPICTASK:
-                EpicTask epic = new EpicTask(fields[2], fields[4]);
-                epic.setId(Integer.parseInt(fields[0]));
-                value = epic;
-                break;
-            case SUBTASK:
-                int epicId = Integer.parseInt(fields[8]);
-                if (tasks.get(TaskFamily.EPICTASK).containsKey(epicId)) {
-                    SubTask sub = new SubTask(getTaskNH(epicId, tasks), fields[2], fields[4]);
-                    sub.setId(Integer.parseInt(fields[0]));
-                    sub.setStatus(Statuses.valueOf(fields[3]));
-                    setTimeFromString(sub, fields[5], fields[6], fields[7]);
-                    value = sub;
-                }
-                break;
-        }
-        return value;
-    }
-
-    private static <T extends Task> void setTimeFromString(T task, String start, String duration, String end) {
-        LocalDateTime startOpt = start.equals("null")
-                ? null : LocalDateTime.parse(start, DATE_TIME_FORMATTER);
-        task.setStartTime(startOpt);
-        Integer duraOpt = duration.equals("null")
-                ? null : Integer.parseInt(duration);
-        task.setDuration(duraOpt);
-        LocalDateTime endOpt = end.equals("null")
-                ? null : LocalDateTime.parse(end, DATE_TIME_FORMATTER);
-        task.setEndTime(endOpt);
-    }
-
-    private static <T extends Task> void restoreTaskToMap(T task,
-                                                          HashMap<TaskFamily, HashMap<Integer, ? super Task>> tasks) {
-        putTaskToMap(task, tasks);
-    }
-
-    private static List<Integer> historyFromString(String data) {
-        List<Integer> idList = Collections.emptyList();
-
-        if (!data.equals("No history")) {
-            String[] ids = data.split(",");
-            idList = new ArrayList<>(ids.length);
-            for (String id : ids) {
-                idList.add(Integer.parseInt(id));
-            }
-        }
-        return idList;
-    }
-
-    private static void idListToHistory(List<Integer> idList,
-                                        HashMap<TaskFamily, HashMap<Integer, ? super Task>> tasks,
-                                        HistoryManager histMan) {
-        if (!idList.isEmpty()) {
-            for (int id : idList) {
-                histMan.add(getTaskNH(id, tasks));
-            }
-        }
-    }
-
-    private static void loadFromFile(Path csvPath, HashMap<TaskFamily, HashMap<Integer, ? super Task>> tasks,
-                                     HistoryManager histMan, InMemoryTaskManager tm) {
-        try {
-            if (!Files.exists(csvPath)) {
-                Files.createFile(csvPath);
-            }
-
-            List<String> file = Files.readAllLines(csvPath);
-
-            if (!file.isEmpty()) {
-                List<String> subTaskStrings = new ArrayList<>();
-                for (int i = 1; i < file.size() - 4; i++) {
-                    String data = file.get(i);
-                    if (data.equals("No tasks")) {
-                        break;
-                    }
-                    if (data.startsWith(String.valueOf(TaskFamily.SUBTASK.ordinal() + 1))) {
-                        subTaskStrings.add(data);
-                    } else {
-                        restoreTaskToMap(fromString(data, tasks), tasks);
-                    }
-                }
-                for (String data : subTaskStrings) {
-                    restoreTaskToMap(fromString(data, tasks), tasks);
-                }
-                idListToHistory(historyFromString(file.get(file.size() - 1)), tasks, histMan);
-                tm.idCounter = getIdCounterStateFromFile(file.get(file.size() - 3));
-            }
-        } catch (IOException e) {
-            throw new ManagerSaveException(e);
-        }
-    }
-
-    private static int getIdCounterStateFromFile(String state) {
-        return Integer.parseInt(state);
     }
 
     public Path getCsvPath() {
@@ -243,6 +89,154 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         save();
     }
 
+    protected static <T extends Task> String taskToString(T task) { //в тз String toString(Task task)
+        String data;
+        String startTime = task.getStartTime() == null
+                ? "null" : task.getStartTime().format(DATE_TIME_FORMATTER);
+        String duration = task.getStartTime() == null
+                ? "null" : task.getDuration().toString();
+        String endTime = task.getEndTime() == null
+                ? "null" : task.getEndTime().format(DATE_TIME_FORMATTER);
+
+        data = task.getId() + "," + defineTypeById(task.getId())
+                + "," + task.getName().replace(',', '¶')//Если пользователь ввел в имени
+                //или описании задачи запятую, без замены символа обратная сборка поломается,
+                //т.к. сплит неправильно поделит поля.
+                + "," + task.getStatus()
+                + "," + task.getDescription().replace(',', '¶')
+                + "," + startTime + "," + duration + "," + endTime;
+        if (TaskFamily.getEnumFromClass(task.getClass()).equals(TaskFamily.SUBTASK)) {
+            SubTask sub = (SubTask) task;
+            data += "," + sub.getMyEpicId();
+        }
+        return data;
+    }
+
+    protected static String historyToString(HistoryManager histMan) {
+        StringBuilder history = new StringBuilder();
+        for (Task task : histMan.getHistory()) {
+            history.append(task.getId()).append(",");
+        }
+        if (history.length() > 0) {
+            history.delete(history.length() - 1, history.length());
+        } else {
+            history.append("No history");
+        }
+        return history.toString();
+    }
+
+    protected static Task fromString(String data, HashMap<TaskFamily, HashMap<Integer, ? super Task>> tasks) {
+        Task value = null;
+        String[] fields = data.split(",");
+
+        for (int i = 0; i < fields.length; i++) {
+            fields[i] = fields[i].replace('¶', ',');
+        }
+        //id,type,name,status,description,start,duration,end,epic
+        TaskFamily TF = TaskFamily.valueOf(fields[1]);
+        switch (TF) {
+            case TASK:
+                Task task = new Task(fields[2], fields[4]);
+                task.setId(Integer.parseInt(fields[0]));
+                task.setStatus(Statuses.valueOf(fields[3]));
+                setTimeFromString(task, fields[5], fields[6], fields[7]);
+                value = task;
+                break;
+            case EPICTASK:
+                EpicTask epic = new EpicTask(fields[2], fields[4]);
+                epic.setId(Integer.parseInt(fields[0]));
+                value = epic;
+                break;
+            case SUBTASK:
+                int epicId = Integer.parseInt(fields[8]);
+                if (tasks.get(TaskFamily.EPICTASK).containsKey(epicId)) {
+                    SubTask sub = new SubTask(getTaskNH(epicId, tasks), fields[2], fields[4]);
+                    sub.setId(Integer.parseInt(fields[0]));
+                    sub.setStatus(Statuses.valueOf(fields[3]));
+                    setTimeFromString(sub, fields[5], fields[6], fields[7]);
+                    value = sub;
+                }
+                break;
+        }
+        return value;
+    }
+
+    protected static <T extends Task> void setTimeFromString(T task, String start, String duration, String end) {
+        LocalDateTime startOpt = start.equals("null")
+                ? null : LocalDateTime.parse(start, DATE_TIME_FORMATTER);
+        task.setStartTime(startOpt);
+        Integer duraOpt = duration.equals("null")
+                ? null : Integer.parseInt(duration);
+        task.setDuration(duraOpt);
+        LocalDateTime endOpt = end.equals("null")
+                ? null : LocalDateTime.parse(end, DATE_TIME_FORMATTER);
+        task.setEndTime(endOpt);
+    }
+
+    protected static <T extends Task> void restoreTaskToMap(T task,
+                                                            HashMap<TaskFamily, HashMap<Integer, ? super Task>> tasks) {
+        putTaskToMap(task, tasks);
+    }
+
+    protected static List<Integer> historyFromString(String data) {
+        List<Integer> idList = Collections.emptyList();
+
+        if (!data.equals("No history")) {
+            String[] ids = data.split(",");
+            idList = new ArrayList<>(ids.length);
+            for (String id : ids) {
+                idList.add(Integer.parseInt(id));
+            }
+        }
+        return idList;
+    }
+
+    protected static void idListToHistory(List<Integer> idList,
+                                          HashMap<TaskFamily, HashMap<Integer, ? super Task>> tasks,
+                                          HistoryManager histMan) {
+        if (!idList.isEmpty()) {
+            for (int id : idList) {
+                histMan.add(getTaskNH(id, tasks));
+            }
+        }
+    }
+
+    private static void loadFromFile(Path csvPath, HashMap<TaskFamily, HashMap<Integer, ? super Task>> tasks,
+                                     HistoryManager histMan, InMemoryTaskManager taskMan) {
+        if (!Files.exists(csvPath)) {
+            return;
+        }
+        try {
+            List<String> file = Files.readAllLines(csvPath);
+
+            if (!file.isEmpty()) {
+                List<String> subTaskStrings = new ArrayList<>();
+                for (int i = 1; i < file.size() - 4; i++) {
+                    String data = file.get(i);
+                    if (data.equals("No tasks")) {
+                        break;
+                    }
+                    if (data.startsWith(String.valueOf(TaskFamily.SUBTASK.ordinal() + 1))) {
+                        subTaskStrings.add(data);
+                    } else {
+                        restoreTaskToMap(fromString(data, tasks), tasks);
+                    }
+                }
+                for (String data : subTaskStrings) {
+                    restoreTaskToMap(fromString(data, tasks), tasks);
+                }
+                idListToHistory(historyFromString(file.get(file.size() - 1)), tasks, histMan);
+                taskMan.idCounter = getIdCounterStateFromFile(file.get(file.size() - 3));
+            }
+        } catch (IOException e) {
+            throw new ManagerIOException(e);
+        }
+    }
+
+    protected static int getIdCounterStateFromFile(String state) {
+        return Integer.parseInt(state);
+    }
+
     private <T extends Task> void writeCSVMapToFile() throws IOException {
         String toFile = "id,type,name,status,description,start,duration,end,epic";
         Files.writeString(csvPath, toFile + "\n",
@@ -278,11 +272,14 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
 
     private void save() {
         try {
+            if (!Files.exists(csvPath)) {
+                Files.createFile(csvPath);
+            }
             writeCSVMapToFile();
             writeIdCounterStateToFile();
             writeHistoryToFile(historyToString(histMan));
         } catch (IOException e) {
-            throw new ManagerSaveException(e);
+            throw new ManagerIOException(e);
         }
     }
 }

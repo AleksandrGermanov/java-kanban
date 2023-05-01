@@ -1,19 +1,25 @@
 package test.management;
 
+import exchange.KVServer;
 import management.Managers;
 import management.history.InMemoryHistoryManager;
 import management.task.FileBackedTaskManager;
-import management.task.InMemoryTaskManager;
+import management.task.HttpTaskManager;
 import management.time.OneThreadTimeManager;
 import org.junit.jupiter.api.Test;
+
+import java.io.IOException;
 
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
 class ManagersTest {
 
     @Test
-    void getDefault() {
-        assertInstanceOf(InMemoryTaskManager.class, Managers.getDefault());
+    void getDefault() throws IOException {
+        KVServer kvs = new KVServer();
+        kvs.start();
+        assertInstanceOf(HttpTaskManager.class, Managers.getDefault());
+        kvs.stop();
     }
 
     @Test

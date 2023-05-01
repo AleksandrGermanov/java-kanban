@@ -1,6 +1,7 @@
 package management.task;
 
 
+import task.EpicTask;
 import task.Task;
 
 import java.util.ArrayList;
@@ -12,6 +13,10 @@ public interface TaskManager {
 
     <T extends Task> void renewTask(T task);
 
+    <T extends Task> T getTask(int id);
+
+    <T extends Task> void removeTask(int id);
+
     ArrayList<String> getTaskList(TaskFamily type);
 
     ArrayList<String> getTaskList();
@@ -20,10 +25,10 @@ public interface TaskManager {
 
     void removeAllTasks();
 
-    <T extends Task> T getTask(int id);
-
-    <T extends Task> void removeTask(int id);
+    List<String> getEpicSubsList(EpicTask epic);
 
     List<Task> getHistory();
+
+    List<Task> getPrioritizedTasks();
 }
 

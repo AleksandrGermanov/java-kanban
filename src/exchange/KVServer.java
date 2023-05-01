@@ -43,7 +43,7 @@ public class KVServer {
                     return;
                 }
                 if (!data.containsKey(key)) {
-                    System.out.println("Value для сохранения пустой. value указывается в теле запроса");
+                    System.out.println("По вашему ключу "+ key + " ничего не нашлось.");
                     h.sendResponseHeaders(400, 0);
                     return;
                 }
@@ -52,7 +52,7 @@ public class KVServer {
                 h.getResponseBody().write(value.getBytes());
                 System.out.println("Значение ключа " + key + " успешно отправлено!");
             } else {
-                System.out.println("/save ждёт GET-запрос, а получил: " + h.getRequestMethod());
+                System.out.println("/load ждёт GET-запрос, а получил: " + h.getRequestMethod());
                 h.sendResponseHeaders(405, 0);
             }
         } finally {
@@ -83,7 +83,7 @@ public class KVServer {
                 }
                 data.put(key, value);
                 System.out.println("Значение для ключа " + key + " успешно обновлено!");
-                h.sendResponseHeaders(200, 0);
+                h.sendResponseHeaders(201, 0);
             } else {
                 System.out.println("/save ждёт POST-запрос, а получил: " + h.getRequestMethod());
                 h.sendResponseHeaders(405, 0);
@@ -112,6 +112,10 @@ public class KVServer {
         System.out.println("Открой в браузере http://localhost:" + PORT + "/");
         System.out.println("API_TOKEN: " + apiToken);
         server.start();
+    }
+
+    public void stop(){
+        server.stop(1);
     }
 
     private String generateApiToken() {

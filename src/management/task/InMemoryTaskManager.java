@@ -11,6 +11,8 @@ import task.Task;
 import java.text.DecimalFormat;
 import java.util.*;
 
+import static management.time.OneThreadTimeManager.DATE_TIME_FORMATTER;
+
 public class InMemoryTaskManager implements TaskManager {
 
     protected HistoryManager histMan;
@@ -34,8 +36,8 @@ public class InMemoryTaskManager implements TaskManager {
         this.timeMan = timeMan;
     }
 
-    protected static <T extends Task> T getTaskNH(int id, HashMap<TaskFamily,
-            HashMap<Integer, ? super Task>> tasks) {//NH - no History
+    public static <T extends Task> T getTaskNH(int id, HashMap<TaskFamily,
+            HashMap<Integer, ? super Task>> tasks) throws NoMatchesFoundException {//NH - no History
         T task = null;
         if (isFoundById(id, tasks))
             for (int index : tasks.get(defineTypeById(id)).keySet()) {
@@ -127,6 +129,13 @@ public class InMemoryTaskManager implements TaskManager {
         putTaskToMap(task, tasks);
         if (!(task instanceof EpicTask)) {
             timeMan.addToValidation(task);
+            if (!timeMan.isTimeSet(task) && task.getStartTime() != null) {
+                timeMan.setTime(task.getStartTime().format(DATE_TIME_FORMATTER),
+                        task.getDuration(), task);
+            }
+        } else {
+            EpicTask epic = (EpicTask) task;
+            epic.setTime();
         }
     }
 
@@ -147,34 +156,33 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     @Override
-    public <T extends Task> void removeTask(int id) throws NoMatchesFoundException{
-            if (!isFoundById(id, tasks)) {
-                throw new NoMatchesFoundException("ID не нашлось!");
-            } else {
-                T task = getTaskNH(id, tasks);
+    public <T extends Task> void removeTask(int id) throws NoMatchesFoundException {
+        if (!isFoundById(id, tasks)) {
+            throw new NoMatchesFoundException("ID не нашлось!");
+        } else {
+            T task = getTaskNH(id, tasks);
 
-                switch (defineTypeById(id)) {
-                    case SUBTASK:
-                        SubTask subTask = (SubTask) task;
-                        subTask.getMyEpic().getMySubTaskMap().remove(subTask.getId());
-                        subTask.getMyEpic().setStatus();
-                        subTask.getMyEpic().setTime();
-                        break;
-                    case EPICTASK:
-                        EpicTask epic = (EpicTask) task;
-                        for (SubTask mySub : epic.getMySubTaskMap().values()) {
-                            histMan.remove(mySub.getId());
-                            timeMan.removeFromValidation(task);
-                            tasks.get(TaskFamily.getEnumFromClass(mySub.getClass())).remove(mySub.getId());
-                            mySub.removeMyEpicLink();// это для GC
-                        }
-                        epic.removeMySubTaskMap();// это тоже для GC
-                        break;
-                }
-                histMan.remove(id);
-                timeMan.removeFromValidation(task);
-                tasks.get(TaskFamily.getEnumFromClass(task.getClass())).remove(id);
+            switch (defineTypeById(id)) {
+                case SUBTASK:
+                    SubTask subTask = (SubTask) task;
+                    subTask.getMyEpic().getMySubTaskMap().remove(subTask.getId());
+                    subTask.getMyEpic().setStatus();
+                    subTask.getMyEpic().setTime();
+                    break;
+                case EPICTASK:
+                    EpicTask epic = (EpicTask) task;
+                    for (SubTask mySub : epic.getMySubTaskMap().values()) {
+                        histMan.remove(mySub.getId());
+                        timeMan.removeFromValidation(task);
+                        tasks.get(TaskFamily.getEnumFromClass(mySub.getClass())).remove(mySub.getId());
+                    }
+                    epic.removeMySubTaskMap();// это тоже для GC
+                    break;
             }
+            histMan.remove(id);
+            timeMan.removeFromValidation(task);
+            tasks.get(TaskFamily.getEnumFromClass(task.getClass())).remove(id);
+        }
     }
 
     @Override
@@ -236,9 +244,13 @@ public class InMemoryTaskManager implements TaskManager {
         initializeTasksMap();
     }
 
-    public ArrayList<String> getEpicSubsList(EpicTask epic) { //Получение списка
+    public List<String> getEpicSubsList(EpicTask epic) { //Получение списка
         // всех подзадач определённого эпика.
         return epic.getMySubTaskList();
+    }
+
+    public List<Task> getPrioritizedTasks() {
+        return timeMan.getPrioritizedTasks();
     }
 
     private void initializeTasksMap() {
@@ -250,20 +262,20 @@ public class InMemoryTaskManager implements TaskManager {
         }
     }
 
-    private boolean isFoundType(TaskFamily type) throws NoMatchesFoundException{
-            for (TaskFamily taskType : tasks.keySet()) {
-                if (type.equals(taskType)) {
-                    return true;
-                }
+    private boolean isFoundType(TaskFamily type) throws NoMatchesFoundException {
+        for (TaskFamily taskType : tasks.keySet()) {
+            if (type.equals(taskType)) {
+                return true;
             }
-            throw new NoMatchesFoundException("Задач типа " + type + " не существует!");
+        }
+        throw new NoMatchesFoundException("Задач типа " + type + " не существует!");
     }
 
     private int generateId(Task task) {
         DecimalFormat df = new DecimalFormat("00000");
-        int id = 0;
-            TaskFamily TF = TaskFamily.getEnumFromClass(task.getClass());
-            id = Integer.parseInt((TF.ordinal() + 1) + df.format(idCounter++));
+        int id;
+        TaskFamily TF = TaskFamily.getEnumFromClass(task.getClass());
+        id = Integer.parseInt((TF.ordinal() + 1) + df.format(idCounter++));
         return id;
     }
 }

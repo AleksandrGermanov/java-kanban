@@ -21,6 +21,12 @@ public class EpicTask extends Task {
         mySubTaskMap = new HashMap<>();
     }
 
+    public EpicTask(int id, String name, Statuses status, String description,
+                    LocalDateTime startTime, Integer duration, LocalDateTime endTime) {
+        super(id, name, status, description, startTime, duration, endTime);
+        mySubTaskMap = new HashMap<>();
+    }
+
     @Override
     public void setStatus(Statuses status) {
         try {
