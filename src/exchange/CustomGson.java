@@ -20,7 +20,7 @@ import static management.time.OneThreadTimeManager.DATE_TIME_FORMATTER;
 public class CustomGson {
     private final HttpTaskManager taskMan;
 
-    private JsonSerializer<LocalDateTime> ldtSerializer = (ldt, type, context) -> {
+    private final JsonSerializer<LocalDateTime> ldtSerializer = (ldt, type, context) -> {
         if (ldt != null) {
             return new JsonPrimitive(ldt.format(DATE_TIME_FORMATTER));
         } else {
@@ -28,7 +28,7 @@ public class CustomGson {
         }
     };
 
-    private JsonDeserializer<LocalDateTime> ldtDeserializer = (value, type, context) -> {
+    private final JsonDeserializer<LocalDateTime> ldtDeserializer = (value, type, context) -> {
         if ("null".equals(value.getAsJsonPrimitive().getAsString())) {
             return null;
         } else {
@@ -77,7 +77,7 @@ public class CustomGson {
         }
     }
 
-    class TaskDeserializer implements JsonDeserializer<Task> {
+    static class TaskDeserializer implements JsonDeserializer<Task> {
         @Override
         public Task deserialize(JsonElement json, Type type, JsonDeserializationContext context) {
             JsonObject obj = json.getAsJsonObject();

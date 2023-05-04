@@ -62,7 +62,7 @@ public class HttpTaskServer {
                 handleTaskFamilyKey(exchange, TaskFamily.SUBTASK);
             } else if (key.startsWith("/epic")) {
                 if (key.startsWith("/epic/subtasks") && "GET".equals(exchange.getRequestMethod())) {
-                    handleEpicSubtasksGET(exchange, key);
+                    handleEpicSubtasksGET(exchange);
                 }else {
                     handleStandardSubKey(exchange, TaskFamily.EPICTASK);
                 }
@@ -106,7 +106,7 @@ public class HttpTaskServer {
                 break;
             case "DELETE":
                 taskMan.removeAllTasks();
-                sendResponse(exchange, 202, "ОК");
+                sendResponse(exchange, 202, "Полностью очищено.");
                 break;
             default:
                 sendResponse(exchange, 405,
@@ -223,7 +223,7 @@ public class HttpTaskServer {
 
     private void handleEmptyQueryDELETE(HttpExchange exchange, TaskFamily TF) throws IOException {
         taskMan.removeAllTasks(TF);
-        sendResponse(exchange, 202, "Accepted");
+        sendResponse(exchange, 202, "Очищено.");
     }
 
     private void handleEmptyQueryGET(HttpExchange exchange, TaskFamily TF) throws IOException {
@@ -261,9 +261,10 @@ public class HttpTaskServer {
                 + TF + " с id " + newId + " была создана.");
     }
 
-    private void handleEpicSubtasksGET(HttpExchange exchange, String key) throws IOException {
-        int id = Integer.parseInt(key.substring(
-                key.indexOf(String.valueOf(TaskFamily.EPICTASK.ordinal() + 1))));
+    private void handleEpicSubtasksGET(HttpExchange exchange) throws IOException {
+        String query = exchange.getRequestURI().getQuery();
+        int id = Integer.parseInt(query.substring(
+                query.indexOf(String.valueOf(TaskFamily.EPICTASK.ordinal() + 1))));
         Type listOfStrings = new TypeToken<List<String>>() {
         }.getType();
         String gson = CustomGson.getSimplePrettyGson().toJson(taskMan.getEpicSubsList(taskMan.getTask(id))

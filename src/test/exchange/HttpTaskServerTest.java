@@ -9,10 +9,10 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static test.exchange.HttpTaskClient.Method.*;
+import static test.exchange.HttpTaskClientForTests.Method.*;
 
 public class HttpTaskServerTest {
-    HttpTaskClient client = new HttpTaskClient();
+    HttpTaskClientForTests client = new HttpTaskClientForTests();
 
     static KVServer kvs;
 
@@ -33,7 +33,7 @@ public class HttpTaskServerTest {
     }
 
     @Test
-    void accumulate() {
+    void accumulate() { //тесты собраны под одной аннотацией, т.к. важен порядок их выполнения.
         wrongPath();
         tasksGETWhenEmpty();
         tasksDELETEWhenEmpty();
@@ -53,8 +53,19 @@ public class HttpTaskServerTest {
         tasksHistoryGET();
         tasksHistoryPOST();
         tasksTaskPOSTWithQuery();
-        tasksEpicTaskPOSTWithQuery();
+        tasksEpicPOSTWithQuery();
         tasksSubTaskPOSTWithQuery();
+        tasksTaskGETWithQuery();
+        tasksEpicGETWithQuery();
+        tasksEpicSubtasksGETWithQuery();
+        tasksSubTaskGETWithQuery();
+        tasksTaskDELETEWithQuery();
+        tasksEpicDELETEWithQuery();
+        tasksSubTaskDELETEWithQuery();
+        tasksTaskDELETE();
+        tasksEpicDELETE();
+        tasksSubTaskDELETE();
+        tasksDELETE();
     }
 
     void wrongPath() {
@@ -75,7 +86,7 @@ public class HttpTaskServerTest {
 
     void tasksDELETEWhenEmpty() {
         String resp = client.sendRequest(DELETE, "", "/tasks");
-        assertEquals("202 ОК", resp);
+        assertEquals("202 Полностью очищено.", resp);
     }
 
 
@@ -109,9 +120,9 @@ public class HttpTaskServerTest {
         String resp2 = client.sendRequest(POST,
                 "{\n"
                         + "  \"id\": 100000,\n"
-                        + "  \"name\": \"sf\",\n"
+                        + "  \"name\": \"first\",\n"
                         + "  \"status\": \"IN_PROGRESS\",\n"
-                        + "  \"description\": \"adsasd\",\n"
+                        + "  \"description\": \"of all...\",\n"
                         + "  \"startTime\": \"26.04.2023 10:40\",\n"
                         + "  \"duration\": 10,\n"
                         + "  \"endTime\": \"01.10.1000 00:01\"\n"
@@ -235,7 +246,7 @@ public class HttpTaskServerTest {
         String resp1 = client.sendRequest(POST, "Круши-ломай!", "/tasks", "/task", "?id=", "100001");
         assertTrue(resp1.startsWith("422 Ошибка при обработке запроса:"));
         String resp2 = client.sendRequest(POST,
-                "{\n"+ "id = 100001,"
+                "{\n" + "id = 100001,"
                         + "  \"name\": \"new\",\n"
                         + "  \"status\": \"DONE\",\n"
                         + "  \"description\": \"new description\"\n"
@@ -245,8 +256,8 @@ public class HttpTaskServerTest {
         assertEquals("202 Обновлено.", resp2);
     }
 
-    void tasksEpicTaskPOSTWithQuery() {
-        String resp1 = client.sendRequest(POST, "Круши-ломай!", "/tasks", "/epic","?id=", "200002");
+    void tasksEpicPOSTWithQuery() {
+        String resp1 = client.sendRequest(POST, "Круши-ломай!", "/tasks", "/epic", "?id=", "200002");
         assertTrue(resp1.startsWith("422 Ошибка при обработке запроса:"));
         String resp2 = client.sendRequest(POST,
                 "{\n"
@@ -274,5 +285,90 @@ public class HttpTaskServerTest {
                 "/tasks", "/subtask", "?id=", "300004");
         System.out.println(client.sendRequest(GET, null, "/tasks", "/subtask", "?id=", "300004"));
         assertEquals("202 Обновлено.", resp2);
+    }
+
+    void tasksTaskGETWithQuery() {
+        String resp = client.sendRequest(GET,
+                "",
+                "/tasks", "/task", "?id=", "100001");
+        assertTrue(resp.startsWith("200"));
+    }
+
+    void tasksEpicGETWithQuery() {
+        String resp = client.sendRequest(GET,
+                "",
+                "/tasks", "/epic", "?id=", "200002");
+        System.out.println(resp);
+        assertTrue(resp.startsWith("200"));
+    }
+
+    void tasksEpicSubtasksGETWithQuery() {
+        String resp = client.sendRequest(GET,
+                "",
+                "/tasks", "/epic","/subtasks", "?id=", "200002");
+        System.out.println(resp);
+        assertTrue(resp.startsWith("200"));
+    }
+
+    void tasksSubTaskGETWithQuery() {
+        String resp = client.sendRequest(GET,
+                "",
+                "/tasks", "/subtask", "?id=", "300004");
+        System.out.println(resp);
+        assertTrue(resp.startsWith("200"));
+    }
+
+    void tasksTaskDELETEWithQuery() {
+        String resp = client.sendRequest(DELETE,
+                "",
+                "/tasks", "/task", "?id=", "100001");
+        assertEquals(resp, "202 Удалено.");
+    }
+
+    void tasksEpicDELETEWithQuery() {
+        String resp = client.sendRequest(DELETE,
+                "",
+                "/tasks", "/epic", "?id=", "200003");
+        System.out.println(resp);
+        assertEquals(resp, "202 Удалено.");
+    }
+
+    void tasksSubTaskDELETEWithQuery() {
+        String resp = client.sendRequest(DELETE,
+                "",
+                "/tasks", "/subtask", "?id=", "300004");
+        System.out.println(resp);
+        assertEquals(resp, "202 Удалено.");
+    }
+
+    void tasksTaskDELETE() {
+        String resp = client.sendRequest(DELETE,
+                "",
+                "/tasks", "/task");
+        assertEquals(resp, "202 Очищено.");
+    }
+
+    void tasksEpicDELETE() {
+        String resp = client.sendRequest(DELETE,
+                "",
+                "/tasks", "/epic");
+        System.out.println(resp);
+        assertEquals(resp, "202 Очищено.");
+    }
+
+    void tasksSubTaskDELETE() {
+        String resp = client.sendRequest(DELETE,
+                "",
+                "/tasks", "/subtask");
+        System.out.println(resp);
+        assertEquals(resp, "202 Очищено.");
+    }
+
+    void tasksDELETE() {
+        String resp = client.sendRequest(DELETE,
+                "",
+                "/tasks");
+        System.out.println(resp);
+        assertEquals(resp, "202 Полностью очищено.");
     }
 }

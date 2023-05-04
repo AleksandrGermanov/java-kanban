@@ -6,17 +6,17 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
-public class HttpTaskClient {
+public class HttpTaskClientForTests {
     private final HttpClient client = HttpClient.newHttpClient();
     private final URI httpTaskServerURI = URI.create("http://localhost:8080");
 
-    public String sendRequest(Method M, String body, String... pathParts) {
+    public String sendRequest(Method METHOD, String body, String... pathParts) {
         String resp = "";
         try {
             HttpRequest.Builder builder = HttpRequest.newBuilder();
             String path = String.join("", pathParts);
             builder.uri(URI.create(httpTaskServerURI + path));
-            switch (M) {
+            switch (METHOD) {
                 case GET:
                     HttpResponse<String> response1 = client.send(builder.GET().build(),
                             HttpResponse.BodyHandlers.ofString());
