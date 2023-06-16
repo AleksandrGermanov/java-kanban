@@ -23,12 +23,13 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 public class HttpTaskManagerTest extends TaskManagerTest<HttpTaskManager> {
     KVServer kvs;
+    URI KVServerURI = URI.create("http://localhost:8078/");
 
     @BeforeEach
     void runKVServerAndCreateTaskMan() throws IOException {
         kvs = new KVServer();
         kvs.start();
-        taskMan = new HttpTaskManager(URI.create("http://localhost:8078/"));
+        taskMan = new HttpTaskManager(KVServerURI);
     }
 
     @AfterEach
@@ -43,7 +44,7 @@ public class HttpTaskManagerTest extends TaskManagerTest<HttpTaskManager> {
         ArrayList<String> emptyTaskList = taskMan.getTaskList();
         List<Task> emptyHistory = taskMan.getHistory();
         //воспроизводим пустой лист из истории
-        taskMan = new HttpTaskManager(URI.create("http://localhost:8078/"));
+        taskMan = new HttpTaskManager(KVServerURI);
         assertEquals(emptyTaskList, taskMan.getTaskList());
         assertEquals(emptyHistory, taskMan.getHistory());
         //создаем случайные задания
@@ -51,7 +52,7 @@ public class HttpTaskManagerTest extends TaskManagerTest<HttpTaskManager> {
         mttm.createRandomTasks(20);
         ArrayList<String> oldTaskList = taskMan.getTaskList();
         //сравниваем старый и новый TaskList и проверяем, что история не поменялась
-        taskMan = new HttpTaskManager(URI.create("http://localhost:8078/"));
+        taskMan = new HttpTaskManager(KVServerURI);
         assertEquals(oldTaskList, taskMan.getTaskList());
         assertNotEquals(emptyTaskList, taskMan.getTaskList());
         assertEquals(emptyHistory, taskMan.getHistory());
@@ -61,7 +62,7 @@ public class HttpTaskManagerTest extends TaskManagerTest<HttpTaskManager> {
         assertNotEquals(emptyHistory, taskMan.getHistory());
         List<Task> oldHistory = taskMan.getHistory();
         //создаем новый менеджер и проверяем историю
-        taskMan = new HttpTaskManager(URI.create("http://localhost:8078/"));
+        taskMan = new HttpTaskManager(KVServerURI);
         mttm = new ManualTestTaskManager<>(taskMan);
         assertEquals(oldTaskList, taskMan.getTaskList());
         assertEquals(oldHistory, taskMan.getHistory());
@@ -71,7 +72,7 @@ public class HttpTaskManagerTest extends TaskManagerTest<HttpTaskManager> {
         assertNotEquals(oldTaskList, taskMan.getTaskList());
         oldTaskList = taskMan.getTaskList();
         oldHistory = taskMan.getHistory();
-        taskMan = new HttpTaskManager(URI.create("http://localhost:8078/"));
+        taskMan = new HttpTaskManager(KVServerURI);
         assertEquals(oldTaskList, taskMan.getTaskList());
         assertEquals(oldHistory, taskMan.getHistory());
         //назначим время таскам и субтаскам
@@ -89,15 +90,14 @@ public class HttpTaskManagerTest extends TaskManagerTest<HttpTaskManager> {
         oldTaskList = taskMan.getTaskList();
         oldHistory = taskMan.getHistory();
         //проверяем загрузку задач со временем
-        taskMan = new HttpTaskManager(URI.create("http://localhost:8078/"));
+        taskMan = new HttpTaskManager(KVServerURI);
         assertEquals(oldTaskList, taskMan.getTaskList());
         assertEquals(oldHistory, taskMan.getHistory());
     }
 
     @Test
-    void testWriting() {
-        try {
-            KVClient client = new KVClient(URI.create("http://localhost:8078/"));
+    void testWriting() throws IOException, InterruptedException {
+            KVClient client = new KVClient(KVServerURI);
             taskMan.removeAllTasks();
             String state1 = client.loadState();
             taskMan.createTask(new Task("task", "task_description"));
@@ -125,15 +125,11 @@ public class HttpTaskManagerTest extends TaskManagerTest<HttpTaskManager> {
             taskMan.getTask(300002);
             state1 = client.loadState();
             assertNotEquals(state1, state2);
-        } catch (IOException | InterruptedException e) {
-            e.printStackTrace();
-        }
     }
 
     @Test
-    void testLoading() {
-        try {
-            KVClient client = new KVClient(URI.create("http://localhost:8078/"));
+    void testLoading() throws IOException, InterruptedException{
+            KVClient client = new KVClient(KVServerURI);
             taskMan.removeAllTasks();
             String emptyState = client.loadState();
             taskMan.createTask(new Task("task", "task_description"));
@@ -151,14 +147,11 @@ public class HttpTaskManagerTest extends TaskManagerTest<HttpTaskManager> {
             taskMan.getTask(300002);
             String fullState = client.loadState();
             client.saveState(emptyState);
-            HttpTaskManager tm = new HttpTaskManager(URI.create("http://localhost:8078/"));
+            HttpTaskManager tm = new HttpTaskManager(KVServerURI);
             assertNotEquals(taskMan.getTasks(), tm.getTasks());
             client.saveState(fullState);
-            HttpTaskManager tm2 = new HttpTaskManager(URI.create("http://localhost:8078/"));
+            HttpTaskManager tm2 = new HttpTaskManager(KVServerURI);
             assertEquals(taskMan.getTasks(), tm2.getTasks());
             assertNotEquals(tm.getTasks(), tm2.getTasks());
-        } catch (IOException | InterruptedException e) {
-            e.printStackTrace();
-        }
     }
 }

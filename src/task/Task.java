@@ -124,7 +124,13 @@ public class Task implements Comparable<Task> {
     }
 
     private Comparator<Task> byCounter() {
-        return Comparator.comparingInt(task -> Integer.parseInt(String.valueOf(task.getId()).substring(1)));
+        return Comparator.comparingInt(task -> {
+            try{
+                return Integer.parseInt(String.valueOf(task.getId()).substring(1));
+            } catch (NumberFormatException e){
+                return 0;
+            }
+        });
     }
 
     @Override

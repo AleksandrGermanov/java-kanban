@@ -35,6 +35,10 @@ public class HttpTaskServer {
         customGson = new CustomGson(taskMan);
     }
 
+    public TaskManager getTaskMan() {
+        return taskMan;
+    }
+
     public void start() {
         System.out.println("Сервер стартовал на порту " + PORT);
         server.start();
@@ -82,13 +86,16 @@ public class HttpTaskServer {
             e.printStackTrace();
         } catch (NoMatchesFoundException e) {
             sendResponse(exchange, 422, "Ошибка при обработке запроса: "
-                    + "несоответствие сохраненных и переданных данных.");
+                    + "несоответствие сохраненных и переданных/запрошенных данных.");
             e.printStackTrace();
         } catch (JsonParseException e) {
             sendResponse(exchange, 422, "Ошибка при обработке запроса: "
                     + e.getMessage());
             e.printStackTrace();
-        } finally {
+        } catch (Exception e) {
+        sendResponse(exchange, 500, "Непредвиденная ошибка сервера.");
+        e.printStackTrace();
+    }finally {
             exchange.close();
         }
 
@@ -115,7 +122,10 @@ public class HttpTaskServer {
     }
 
     private void handleTaskFamilyKey(HttpExchange exchange, TaskFamily TF) throws IOException {
-        String subKey = exchange.getRequestURI().getPath().substring((String.format("/tasks/%s", TF.name())).length());
+        String subKey = exchange
+                .getRequestURI()
+                .getPath()
+                .substring((String.format("/tasks/%s", TF.name())).length());
         String regex = String.format("/?(\\?id=%d+[0-9]*)?", TF.ordinal() + 1);
 
         if (!subKey.matches(regex)) {
