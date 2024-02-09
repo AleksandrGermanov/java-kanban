@@ -17,11 +17,6 @@ import java.util.Set;
 
 import static management.time.OneThreadTimeManager.DATE_TIME_FORMATTER;
 
-/**
- * Необходимость данного класса обуславливается сложной структурой
- * классов EpicTask и SubTask. Ниже будут представлены комментарии
- * по представленным сериалайзерам/десериалайзерам.
- */
 public class CustomGson {
     private final HttpTaskManager taskMan;
 
@@ -41,14 +36,6 @@ public class CustomGson {
         }
     };
 
-    /**
-     * Экземпляр класса работает с конкретным HttpTaskManager
-     * поскольку иначе невозможно будет создать или обновить SubTask - конструктор обязательно
-     * требует объект EpicTask.
-     * Этой зависимости не понадобилось бы, будь Task и его наследники реализованы как POJO.
-     * Рефакторинг ключевых классов - это не то, чем хочется заниматься под конец проекта,
-     * а кроме того, это противоречит OCP.
-     */
     public CustomGson(TaskManager taskMan) {
         if (!(taskMan instanceof HttpTaskManager)) {
             throw new ManagerIOException("Ошибка сервера. Выбран неверный обработчик данных.");
@@ -74,11 +61,6 @@ public class CustomGson {
                 .create();
     }
 
-    /**
-     * Этот сериалайзер самый необязательный, однако я его добавил
-     * т.к. Task не является POJO и не совсем понятно, как gson работает с Enum, а также
-     * здесь неявно происходит сериализация нулевых полей startTime и endTime (через context)
-     */
     static class TaskSerializer implements JsonSerializer<Task> {
         @Override
         public JsonElement serialize(Task task, Type type, JsonSerializationContext context) {
@@ -94,10 +76,6 @@ public class CustomGson {
         }
     }
 
-    /**
-     * Этот десериалайзер создает нулевой объект, даже если входящий json пустой,
-     * без него скорее всего вылезло бы NPE, если статус не определен.
-     */
     static class TaskDeserializer implements JsonDeserializer<Task> {
         @Override
         public Task deserialize(JsonElement json, Type type, JsonDeserializationContext context) {
@@ -122,12 +100,6 @@ public class CustomGson {
         }
     }
 
-    /**
-     * Этот сериалайзер практически идентичен TaskSerializer, добавлена еще одна строка.
-     * В добавленной строке мы передаем Id эпика, в то время как сам экземпляр SubTask
-     * хранит ссылку на эпик. Без этой строки gson начал бы сериализовывать еще и
-     * родительский эпик, а в нем есть map с его субтасками - рекурсия.
-     */
     static class SubTaskSerializer implements JsonSerializer<SubTask> {
         @Override
         public JsonElement serialize(SubTask subTask, Type type, JsonSerializationContext context) {
@@ -144,11 +116,6 @@ public class CustomGson {
         }
     }
 
-    /**
-     * Этот десериалайзер самый необходимый - невозможно создать сущность SubTask без
-     * экземпляра EpicTask. Десериализация пройдет успешно только если в json передан
-     * правильный id эпика.
-     */
     class SubTaskDeserializer implements JsonDeserializer<SubTask> {
         @Override
         public SubTask deserialize(JsonElement json, Type type, JsonDeserializationContext context)
@@ -185,9 +152,6 @@ public class CustomGson {
         }
     }
 
-    /**
-     * Этот сериалайзер передает только Id субтасков, а не всю мапу.
-     */
     static class EpicTaskSerializer implements JsonSerializer<EpicTask> {
         @Override
         public JsonElement serialize(EpicTask epicTask, Type type, JsonSerializationContext context) {
@@ -208,10 +172,6 @@ public class CustomGson {
         }
     }
 
-    /**
-     * Этот десериалайзер восстанавливает map из ключей - id субтасков, и высчитывает статус и время эпика,
-     * исходя из данных в этой мапе, а не просто копирует поля.
-     */
     class EpicTaskDeserializer implements JsonDeserializer<EpicTask> {
         @Override
         public EpicTask deserialize(JsonElement json, Type type, JsonDeserializationContext context)

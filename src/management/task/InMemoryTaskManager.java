@@ -20,10 +20,6 @@ public class InMemoryTaskManager implements TaskManager {
     protected int idCounter = 0;
     protected HashMap<TaskFamily, HashMap<Integer, ? super Task>> tasks;
 
-    /***
-     * "Объекты HistoryManager и TimeManager можно передавать в конструкторе"
-     * Вот этого комментария я не понял - они и так создаются в конструкторе.
-     */
     public InMemoryTaskManager() {
         initializeTasksMap();
         histMan = Managers.getDefaultHistory();
@@ -37,7 +33,7 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     public static <T extends Task> T getTaskNH(int id, HashMap<TaskFamily,
-            HashMap<Integer, ? super Task>> tasks) throws NoMatchesFoundException {//NH - no History
+            HashMap<Integer, ? super Task>> tasks) throws NoMatchesFoundException {
         T task = null;
         if (isFoundById(id, tasks))
             for (int index : tasks.get(defineTypeById(id)).keySet()) {
@@ -145,8 +141,7 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     @Override
-    public <T extends Task> void renewTask(T task) {//Обновление.
-        // Новая версия объекта с верным идентификатором передаётся в виде параметра.
+    public <T extends Task> void renewTask(T task) {
         putTaskToMap(task, tasks);
     }
 
@@ -176,7 +171,7 @@ public class InMemoryTaskManager implements TaskManager {
                         timeMan.removeFromValidation(task);
                         tasks.get(TaskFamily.getEnumFromClass(mySub.getClass())).remove(mySub.getId());
                     }
-                    epic.removeMySubTaskMap();// это тоже для GC
+                    epic.removeMySubTaskMap();
                     break;
             }
             histMan.remove(id);
@@ -198,14 +193,15 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     @Override
-    public ArrayList<String> getTaskList(TaskFamily type) {//Получение списка всех задач.
+    public ArrayList<String> getTaskList(TaskFamily type) {
         ArrayList<String> taskList = new ArrayList<>();
         Iterator<? extends Map.Entry<Integer, ? super Task>> iterator;
 
         if (isFoundType(type)) {
             iterator = tasks.get(type).entrySet().iterator();
             while (iterator.hasNext()) {
-                taskList.add(iterator.next().toString().replace("" + System.lineSeparator() + "", System.lineSeparator()));
+                taskList.add(iterator.next().toString().replace("" + System.lineSeparator() + "",
+                        System.lineSeparator()));
             }
         }
         return taskList;
@@ -228,7 +224,7 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     @Override
-    public void removeAllTasks(TaskFamily type) {//Удаление всех задач.
+    public void removeAllTasks(TaskFamily type) {
         if (isFoundType(type)) {
             for (Integer id : tasks.get(type).keySet()) {
                 removeTask(id);
@@ -244,7 +240,7 @@ public class InMemoryTaskManager implements TaskManager {
         initializeTasksMap();
     }
 
-    public List<String> getEpicSubsList(EpicTask epic) { //Получение списка
+    public List<String> getEpicSubsList(EpicTask epic) {
         // всех подзадач определённого эпика.
         return epic.getMySubTaskList();
     }

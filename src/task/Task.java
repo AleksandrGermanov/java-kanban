@@ -9,10 +9,9 @@ public class Task implements Comparable<Task> {
     protected String name;
     protected Statuses status;
     protected String description;
-    protected LocalDateTime startTime = null;//опциональное поле
+    protected LocalDateTime startTime = null;
     protected Integer duration = null;
-    protected LocalDateTime endTime = null;// добавил это поле для более удобного поиска
-    //пересечений.
+    protected LocalDateTime endTime = null;
 
     public Task() {
         status = Statuses.NEW;
@@ -103,8 +102,7 @@ public class Task implements Comparable<Task> {
                 return result;
             }
         }
-        return byCounter().compare(this, task);// задачам, созданным позже, будет присвоено большее
-        // значение счетчика.
+        return byCounter().compare(this, task);
     }
 
     private Comparator<Task> byStartTimeExistence() {

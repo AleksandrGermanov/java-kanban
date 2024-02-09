@@ -87,8 +87,7 @@ public class ManualTestTaskManager<M extends FileBackedTaskManager> extends File
                     }
                 case TASK:
                 case EPICTASK:
-                    if (coin()) {//нужна, чтобы итерации на несозданные SubTask распределялись равномерно
-                        // между Task и EpicTask
+                    if (coin()) {
                         createRandomTask(new Task());
                     } else {
                         createRandomTask(new EpicTask());

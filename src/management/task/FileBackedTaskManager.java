@@ -78,7 +78,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
     }
 
     @Override
-    public void removeAllTasks(TaskFamily type) {//Удаление всех задач.
+    public void removeAllTasks(TaskFamily type) {
         super.removeAllTasks(type);
         save();
     }
@@ -89,7 +89,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         save();
     }
 
-    protected static <T extends Task> String taskToString(T task) { //в тз String toString(Task task)
+    protected static <T extends Task> String taskToString(T task) {
         String data;
         String startTime = task.getStartTime() == null
                 ? "null" : task.getStartTime().format(DATE_TIME_FORMATTER);
@@ -117,7 +117,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         for (Task task : histMan.getHistory()) {
             history.append(task.getId()).append(",");
         }
-        if (history.length() > 0) {
+        if (!history.isEmpty()) {
             history.delete(history.length() - 1, history.length());
         } else {
             history.append("No history");
@@ -132,7 +132,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         for (int i = 0; i < fields.length; i++) {
             fields[i] = fields[i].replace('¶', ',');
         }
-        //id,type,name,status,description,start,duration,end,epic
+
         TaskFamily TF = TaskFamily.valueOf(fields[1]);
         switch (TF) {
             case TASK:

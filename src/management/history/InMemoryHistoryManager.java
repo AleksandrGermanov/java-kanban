@@ -41,7 +41,7 @@ public class InMemoryHistoryManager implements HistoryManager {
         System.out.println("***\n");
     }
 
-    private static class CustomLinkedList<T extends Task> { //Этот класс не отдельный
+    private static class CustomLinkedList<T extends Task> {
         private static Node<Task> head;
         private static Node<Task> tail;
         private final Map<Integer, Node<Task>> nodeMap = new HashMap<>();
@@ -108,7 +108,7 @@ public class InMemoryHistoryManager implements HistoryManager {
             }
         }
 
-        void removeNode(Node<Task> taskNode) { // по ТЗ removeNode должен принимать Node
+        void removeNode(Node<Task> taskNode) {
             removeNode(taskNode.taskId);
         }
 
@@ -123,7 +123,7 @@ public class InMemoryHistoryManager implements HistoryManager {
         final int taskId;
         final T task;
         boolean isHead;
-        boolean isTail = true; //новый узел всегда добавляется в конец
+        boolean isTail = true;
         Node<T> prev;
         Node<T> next;
 

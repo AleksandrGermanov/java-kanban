@@ -9,10 +9,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
-/***
- * Отсортируйте все задачи по приоритету — то есть по startTime. Если дата старта не задана,
- * добавьте задачу в конец списка задач, подзадач, отсортированных по startTime.
- */
 public class OneThreadTimeManager implements TimeManager {
     public static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
 
@@ -91,7 +87,7 @@ public class OneThreadTimeManager implements TimeManager {
         if (isValidatedByTime(task)) {
             validationSet.add(task);
         } else {
-            System.out.println("Выполнение двух задач одновременно невозможно, мой однопоточный друг!\n" +
+            System.out.println("Выполнение двух задач одновременно невозможно.\n" +
                     "Время выполнения задачи не будет изменено.");
             task.setStartTime(oldStart);
             task.setDuration(oldDuration);

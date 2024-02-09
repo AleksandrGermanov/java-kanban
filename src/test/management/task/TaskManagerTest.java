@@ -61,7 +61,7 @@ abstract class TaskManagerTest<T extends TaskManager> {
         ArrayList<String> filledTaskList = taskMan.getTaskList();
         taskMan.removeAllTasks();
         assertEquals(emptyTaskList, taskMan.getTaskList());
-        taskMan.renewTask(task);//createTask() присваивает новый id
+        taskMan.renewTask(task);
         taskMan.renewTask(epic);
         taskMan.renewTask(sub);
         assertEquals(filledTaskList, taskMan.getTaskList());
